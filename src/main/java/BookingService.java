@@ -56,21 +56,24 @@ public class BookingService {
 
     private void areas(RoutingContext rc) {
         String institution = rc.request().getParam("institution");
+        String retval = "";
+
+        if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
         SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct area from areas where institution = '"+institution+"'", "bookingservice");
-        System.out.println(list);
-        JsonArray array = new JsonArray();
+        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select area from areas where institution = '"+institution+"'", "bookingservice");
 
         for(HashMap area:list) {
-            array.add(area.get("area"));
+            System.out.println(area.get("area"));
+            retval+=area.get("area")+"#";
         }
-
-        JsonObject answer = new JsonObject();
-        answer.put("areas", array);
+        if(retval.contains("#"))
+            retval = retval.substring(0, retval.length()-1);
 
         rc.response().headers().add("Access-Control-Allow-Origin","*");
-        rc.response().end(answer.encodePrettily());
+        rc.response().headers().add("Content-type","html/text");
+
+        rc.response().end(retval);
     }
 
     private String[] do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token) {
@@ -97,7 +100,7 @@ public class BookingService {
         if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
         SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"'", "bookingservice");
+        ArrayList<HashMap<String, Object>> result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' and area = '"+area.trim()+"'", "bookingservice");
 
         boolean found_workplace = false;
 

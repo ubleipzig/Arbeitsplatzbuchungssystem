@@ -5,7 +5,8 @@
         <div class="form-group row">
             <label for="institution" class="col-4 col-form-label">Standort</label>
             <div class="col-8">
-                <select id="institution" name="institution" class="custom-select" required="required">
+                <select id="institution" name="institution" class="custom-select" required="required" onchange="javascript:getAreas()">
+                   <option>Bitte wählen...</option>
                     <option value="BA">Bibliotheca Albertina</option>
                     <option value="BMN">Bibliothek Medizin und Naturwissenschaften</option>
                 </select>

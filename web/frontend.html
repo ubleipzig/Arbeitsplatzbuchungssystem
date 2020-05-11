@@ -62,6 +62,20 @@
             });
         }
 
+        function getAreas() {
+
+
+            $.ajax({
+                url: 'http://localhost:12105/booking/areas?institution='+$("#institution").val(),
+                type: 'get',
+                success: function(data) {
+
+                    $("#area option").remove();
+                    data.split("#").forEach(function(e){$("#area").append("<option>"+e+"</option>");});
+
+                }
+            });
+        }
 
     </script>
     <title>Universitätsbibliothek Leipzig - Arbeitsplatzbuchungssystem</title>
