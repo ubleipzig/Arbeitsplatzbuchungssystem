@@ -1,0 +1,11 @@
+authentication_url =
+library_url =
+
+rest_port = 12105
+
+cache_sql_url =
+cache_sql_user =
+cache_sql_password =
+
+database_user =
+database_password =

@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'org.ub.dev'
+version '1.0-SNAPSHOT'
+
+mainClassName="BookingService"
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://services.ub.uni-leipzig.de/nexus/repository/maven-public"
+    }
+}
+
+dependencies {
+    compile 'de.uni-leipzig.ub:wachtl:6.3.19-20181010.095103-1'
+    compile 'com.sun.xml.ws:jaxws-rt:2.3.3-b01'
+
+    compile group: 'io.vertx', name: 'vertx-core', version: '3.8.1'
+    compile group: 'io.vertx', name: 'vertx-web', version: '3.8.1'
+
+    compile 'mysql:mysql-connector-java:5.1.41'
+
+    compile 'com.sun.org.apache.xml.internal:resolver:20050927'
+    compile files('CacheDB.jar')
+}
