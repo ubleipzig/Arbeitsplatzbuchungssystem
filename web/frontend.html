@@ -26,6 +26,8 @@
         var readernumber = "";
         var token = "";
 
+        var booked_workspace = 0, bookingCode = 0;
+
         function reservation() {
             $("#startdiv").load("login.html");
         }
@@ -49,7 +51,7 @@
 
             readernumber = $("#readernumber").val();
 
-        };
+        }
 
         function do_reservation() {
             $.ajax({
@@ -57,24 +59,31 @@
                 type: 'post',
                 data: $('#booking').serialize(),
                 success: function(data) {
-                    alert(data);
+
+                    var jsondata = $.parseJSON(data);
+
+                    booked_workspace = jsondata.workspaceId;
+                    bookingCode = jsondata.bookingCode;
+
+                    $("#startdiv").load("result.html");
+
+
                 }
             });
         }
 
         function getAreas() {
-
-
-            $.ajax({
+           $.ajax({
                 url: 'http://localhost:12105/booking/areas?institution='+$("#institution").val(),
                 type: 'get',
                 success: function(data) {
-
                     $("#area option").remove();
-                    data.split("#").forEach(function(e){$("#area").append("<option>"+e+"</option>");});
-
-                }
+                        data.split("#").forEach(function(e){
+                            $("#area").append("<option value=\""+e+"\">"+e+"</option>");
+                        });
+                    }
             });
+
         }
 
     </script>

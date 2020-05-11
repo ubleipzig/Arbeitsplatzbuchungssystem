@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,6 +46,7 @@ public class BookingService {
             }
         });
 
+        router.route().handler(CorsHandler.create(".*."));
         router.route("/booking/login*").handler(BodyHandler.create());
         router.post("/booking/login").handler(this::login);
         router.route("/booking/booking*").handler(BodyHandler.create());
@@ -64,13 +66,12 @@ public class BookingService {
         ArrayList<HashMap<String, Object>> list = hub.getMultiData("select area from areas where institution = '"+institution+"'", "bookingservice");
 
         for(HashMap area:list) {
-            System.out.println(area.get("area"));
+
             retval+=area.get("area")+"#";
         }
         if(retval.contains("#"))
             retval = retval.substring(0, retval.length()-1);
 
-        rc.response().headers().add("Access-Control-Allow-Origin","*");
         rc.response().headers().add("Content-type","html/text");
 
         rc.response().end(retval);
@@ -108,17 +109,20 @@ public class BookingService {
         for(HashMap<String, Object> workspace:result) {
             workspace_id = (int)workspace.get("id");
             SQLHub hub_intern = new SQLHub(p);
-            if(hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
-            hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start >= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
-            hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end >= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
-            hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()) {
+            if(
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start >= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end >= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()
+            )
+            {
                 System.out.println("Platz mit der ID "+workspace_id+" gefunden!");
                 found_workplace = true;
             }
 
             if(found_workplace) break;
         }
-        System.out.println(found_workplace);
+
         if(found_workplace) {
 
             //generate bookingcode, uses randomized UUID
@@ -153,7 +157,6 @@ public class BookingService {
         json.put("bookingCode", bookingArray[0]);
         json.put("workspaceId", bookingArray[1]);
 
-        rc.response().headers().add("Access-Control-Allow-Origin","*");
         rc.response().end(json.encodePrettily());
 
     }
@@ -191,7 +194,6 @@ public class BookingService {
 
         }
 
-        rc.response().headers().add("Access-Control-Allow-Origin","*");
         rc.response().end(token);
     }
 
