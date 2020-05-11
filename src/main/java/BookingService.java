@@ -49,7 +49,28 @@ public class BookingService {
         router.post("/booking/login").handler(this::login);
         router.route("/booking/booking*").handler(BodyHandler.create());
         router.post("/booking/booking").handler(this::booking);
+        router.route("/booking/areas*").handler(BodyHandler.create());
+        router.get("/booking/areas").handler(this::areas);
 
+    }
+
+    private void areas(RoutingContext rc) {
+        String institution = rc.request().getParam("institution");
+
+        SQLHub hub = new SQLHub(p);
+        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct area from areas where institution = '"+institution+"'", "bookingservice");
+        System.out.println(list);
+        JsonArray array = new JsonArray();
+
+        for(HashMap area:list) {
+            array.add(area.get("area"));
+        }
+
+        JsonObject answer = new JsonObject();
+        answer.put("areas", array);
+
+        rc.response().headers().add("Access-Control-Allow-Origin","*");
+        rc.response().end(answer.encodePrettily());
     }
 
     private String[] do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token) {
