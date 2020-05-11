@@ -1,5 +1,9 @@
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -7,9 +11,8 @@ import io.vertx.ext.web.handler.BodyHandler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Properties;
+import java.sql.Timestamp;
+import java.util.*;
 
 /**
  * BookingService -  Hauptklasse für das Arbeitsplatzbuchungssystem
@@ -49,7 +52,7 @@ public class BookingService {
 
     }
 
-    private void do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token) {
+    private String[] do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token) {
 
         /**
          * Verfahrensweise:
@@ -59,14 +62,50 @@ public class BookingService {
          *
          */
 
+        String bookingArray[] = {"",""};
+
+        //convert day|month|year|hour|minute to Timestamp
+        Calendar cal = Calendar.getInstance();
+        cal.set(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minute));
+        Timestamp start_sql = new Timestamp(cal.getTimeInMillis());
+
+        //convert duration to milliseconds
+        long duration_ms = Integer.parseInt(duration)*60*1000;
+        Timestamp end_sql = new Timestamp(cal.getTimeInMillis()+duration_ms);
+
+        if(institution.equals("BA")) institution = "Bibliotheca Albertina";
+
         SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> result = hub.getMultiData("select id from workspace where institution = '"+institution+"'", "boookingservice");
+        ArrayList<HashMap<String, Object>> result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"'", "bookingservice");
+
+        boolean found_workplace = false;
+
+        int workspace_id = -1;
         for(HashMap<String, Object> workspace:result) {
-            int workspace_id = (int)workspace.get("id");
+            workspace_id = (int)workspace.get("id");
             SQLHub hub_intern = new SQLHub(p);
-            //hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and ")
+            if(hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
+            hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start >= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
+            hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end >= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
+            hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()) {
+                System.out.println("Platz mit der ID "+workspace_id+" gefunden!");
+                found_workplace = true;
+            }
+
+            if(found_workplace) break;
+        }
+        System.out.println(found_workplace);
+        if(found_workplace) {
+
+            //generate bookingcode, uses randomized UUID
+            bookingArray[0] = UUID.randomUUID().toString();
+            bookingArray[1] = String.valueOf(workspace_id);
+
+            SQLHub hub_intern = new SQLHub(p);
+            hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"')", "bookingservice");
         }
 
+        return bookingArray;
     }
 
     private void booking(RoutingContext rc) {
@@ -81,12 +120,17 @@ public class BookingService {
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
 
-        System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
+        //System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
 
-        do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token);
+        String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token);
+
+
+        JsonObject json = new JsonObject();
+        json.put("bookingCode", bookingArray[0]);
+        json.put("workspaceId", bookingArray[1]);
 
         rc.response().headers().add("Access-Control-Allow-Origin","*");
-        rc.response().end();
+        rc.response().end(json.encodePrettily());
 
     }
 
