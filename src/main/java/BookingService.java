@@ -49,6 +49,8 @@ public class BookingService {
         router.route().handler(CorsHandler.create(".*."));
         router.route("/booking/login*").handler(BodyHandler.create());
         router.post("/booking/login").handler(this::login);
+        router.route("/booking/logout*").handler(BodyHandler.create());
+        router.post("/booking/logout").handler(this::logout);
         router.route("/booking/booking*").handler(BodyHandler.create());
         router.post("/booking/booking").handler(this::booking);
         router.route("/booking/areas*").handler(BodyHandler.create());
@@ -162,6 +164,18 @@ public class BookingService {
     }
 
     private void logout(RoutingContext rc) {
+
+        String token = rc.getBodyAsJson().getString("token");
+        String readernumber = rc.getBodyAsJson().getString("readernumber");
+
+        if(tokenmap.containsKey(readernumber)) {
+            if (tokenmap.get(readernumber).equals(token)) {
+                System.out.println("Removing token");
+                tokenmap.remove(readernumber);
+            }
+        }
+
+        rc.response().end();
 
     }
 

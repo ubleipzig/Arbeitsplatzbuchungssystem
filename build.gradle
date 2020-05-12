@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'maven-publish'
 }
 
 group 'org.ub.dev'
@@ -14,6 +15,38 @@ repositories {
         url "https://services.ub.uni-leipzig.de/nexus/repository/maven-public"
     }
 }
+
+task fatJar(type: Jar, dependsOn: [':compileJava', ':processResources']) {
+
+    archivesBaseName = "BookingService"
+
+    from files(sourceSets.main.output.classesDirs)
+    from {configurations.compile.collect {it.isDirectory() ? it : zipTree(it) }}
+
+}
+
+publishing {
+    publications {
+        groupJar(MavenPublication) {
+            groupId 'org.ub.dev'
+            artifactId 'BookingService'
+            version 'latest'
+
+            artifact fatJar
+        }
+    }
+
+    repositories {
+        maven {
+            url "https://services.ub.uni-leipzig.de/nexus/repository/gradle-deploy/"
+            credentials {
+                username mavenUser
+                password mavenPassword
+            }
+        }
+    }
+}
+
 
 dependencies {
     compile 'de.uni-leipzig.ub:wachtl:6.3.19-20181010.095103-1'
