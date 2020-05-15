@@ -57,6 +57,8 @@ dependencies {
 
     compile 'mysql:mysql-connector-java:5.1.41'
 
+    compile 'org.jdom:jdom2:2.0.6'
+
     compile 'com.sun.org.apache.xml.internal:resolver:20050927'
     compile files('CacheDB.jar')
 }

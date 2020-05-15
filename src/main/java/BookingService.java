@@ -8,11 +8,17 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -29,12 +35,16 @@ public class BookingService {
     //Hashmap zur relationalen Speicherung von LKN und Libero-Token
     HashMap<String, String> tokenmap = new HashMap<>();
 
+    //Hashmap zur Speicherung der Zeitslots nach Institution
+    HashMap<String, String> timeslots = new HashMap<>();
+
     public BookingService() {
 
         init();
         initNetwork();
     }
 
+    //Initialisiere Vertx-basierte API-Endpunkte
     private void initNetwork() {
         Vertx vertx = Vertx.vertx();
         Router router = Router.router(vertx);
@@ -55,9 +65,18 @@ public class BookingService {
         router.post("/booking/booking").handler(this::booking);
         router.route("/booking/areas*").handler(BodyHandler.create());
         router.get("/booking/areas").handler(this::areas);
-
+        router.route("/booking/timeslots*").handler(BodyHandler.create());
+        router.get("/booking/timeslots").handler(this::timeslots);
     }
 
+    /**
+     * Retourniert die Bereiche, die ein Standort aufweisen kann
+     * in einfachen Text-String mit #-Delimiter
+     *
+     * todo: Rückgabe kompletter Option-Einträge, oder Auslieferung als JSON?
+     *
+      * @param rc
+     */
     private void areas(RoutingContext rc) {
         String institution = rc.request().getParam("institution");
         String retval = "";
@@ -79,6 +98,75 @@ public class BookingService {
         rc.response().end(retval);
     }
 
+
+    /**
+     * Retournierung der Zeitslots nach Standort in fertigen Options-Block aus der Hashmap
+     * @param rc
+     */
+    private void timeslots(RoutingContext rc) {
+        String institution = rc.request().getParam("institution");
+
+        if(institution.equals("BA")) institution = "Bibliotheca Albertina";
+
+        rc.response().headers().add("Content-type","html/text");
+        rc.response().end(timeslots.get(institution));
+
+    }
+
+    /**
+     * Buchungsfunktion. Variante mit Zeitslot statt Stunde/Minute/Dauer.
+     * Der timeslot-Parameter wird hierbei zerlegt in Stunde/Minute und die Dauer errechnet.
+     * Danach Aufruf der Basis-Buchungsfunktion.
+     *
+     * @param institution
+     * @param area
+     * @param day
+     * @param month
+     * @param year
+     * @param timeslot
+     * @param readernumber
+     * @param token
+     * @return
+     */
+    private String[] do_booking(String institution, String area, String day, String month, String year, String timeslot, String readernumber, String token) {
+        String hour = timeslot.split("-")[0].substring(0, 2);
+        String minute = timeslot.split("-")[0].substring(2);
+
+        String hour_2 = timeslot.split("-")[1].substring(0,2);
+        String minute_2 = timeslot.split("-")[1].substring(2);
+
+        long dif_min = 0;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        try {
+            Date date1 = sdf.parse(hour+":"+minute);
+            Date date2 = sdf.parse(hour_2+":"+minute_2);
+
+            long dif = date2.getTime()-date1.getTime();
+            dif_min = dif/(1000*60);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return do_booking(institution, area, day, month, year, hour, minute, ""+dif_min, readernumber, token);
+    }
+
+    /**
+     * Basis-Buchungsfunktion.
+     *
+     * @param institution
+     * @param area
+     * @param day
+     * @param month
+     * @param year
+     * @param hour
+     * @param minute
+     * @param duration
+     * @param readernumber
+     * @param token
+     * @return
+     */
     private String[] do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token) {
 
         /**
@@ -118,7 +206,7 @@ public class BookingService {
                     hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()
             )
             {
-                System.out.println("Platz mit der ID "+workspace_id+" gefunden!");
+                //System.out.println("Platz mit der ID "+workspace_id+" gefunden!");
                 found_workplace = true;
             }
 
@@ -144,16 +232,17 @@ public class BookingService {
         String day = rc.request().formAttributes().get("from_day");
         String month = rc.request().formAttributes().get("from_month");
         String year = rc.request().formAttributes().get("from_year");
-        String hour = rc.request().formAttributes().get("from_hour");
-        String minute = rc.request().formAttributes().get("from_minute");
-        String duration = rc.request().formAttributes().get("duration");
+        //String hour = rc.request().formAttributes().get("from_hour");
+        //String minute = rc.request().formAttributes().get("from_minute");
+        //String duration = rc.request().formAttributes().get("duration");
+        String timeslot = rc.request().formAttributes().get("timeslot");
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
 
         //System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
 
-        String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token);
-
+        //String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token);
+        String bookingArray[] = do_booking(institution, area, day, month, year, timeslot, readernumber, token);
 
         JsonObject json = new JsonObject();
         json.put("bookingCode", bookingArray[0]);
@@ -163,6 +252,12 @@ public class BookingService {
 
     }
 
+    /**
+     * Logout. Löscht die Relation token<->readernumber und beendet die offene Libero-Session.
+     * Content-Type: application/json
+     *
+     * @param rc
+     */
     private void logout(RoutingContext rc) {
 
         String token = rc.getBodyAsJson().getString("token");
@@ -170,8 +265,8 @@ public class BookingService {
 
         if(tokenmap.containsKey(readernumber)) {
             if (tokenmap.get(readernumber).equals(token)) {
-                System.out.println("Removing token");
                 tokenmap.remove(readernumber);
+                LiberoManager.getInstance().close(token);
             }
         }
 
@@ -180,7 +275,7 @@ public class BookingService {
     }
 
     /**
-     *   Login-Endpunkt-Deklaration
+     *   Login
      *
      *   Erwartet werden die Variablen readernumber und password
      *   Content-Type: application/x-www-form-urlencoded
@@ -219,6 +314,29 @@ public class BookingService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        String option_template = "<option value=\"###val###\">###name###</option>";
+
+        //Lade die Zeitslots und verarbeite diese als Options-Elemente für das Select-Element
+        try {
+            Document doc = new SAXBuilder().build("config/timeslots.xml");
+            String option_element = new String();
+            for(Element e_inst:doc.getRootElement().getChildren("institution")) {
+                for(Element e_interval:e_inst.getChildren("interval")) {
+                    String cpy_option = option_template;
+                    cpy_option = cpy_option.replaceAll("###val###",e_interval.getAttributeValue("from").toString().replaceAll(":","")+"-"+e_interval.getAttributeValue("until").toString().replaceAll(":",""));
+                    cpy_option = cpy_option.replaceAll("###name###",e_interval.getAttributeValue("from")+"-"+e_interval.getAttributeValue("until"));
+                    option_element+=cpy_option;
+                }
+                timeslots.put(e_inst.getAttributeValue("name"), option_element);
+            }
+        } catch (JDOMException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(timeslots);
 
     }
 

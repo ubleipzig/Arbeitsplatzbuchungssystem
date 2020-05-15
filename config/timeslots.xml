@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<institutions>
+    <institution name="Bibliotheca Albertina">
+        <interval from="08:00" until="12:30"/>
+        <interval from="13:30" until="18:00"/>
+    </institution>
+</institutions>

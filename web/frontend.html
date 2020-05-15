@@ -98,6 +98,16 @@
                     }
             });
 
+            $.ajax({
+                url: 'http://'+url+':12105/booking/timeslots?institution='+$("#institution").val(),
+                type: 'get',
+                success: function(data) {
+                    $("#timeslot option").remove();
+                    $("#timeslot").append(data);
+
+                }
+            });
+
         }
 
     </script>

@@ -76,7 +76,7 @@ public class LiberoManager {
         return token;
     }
 
-    public void close() {
+    public void close(String token) {
         wachtl.getAuthSoapClient().logout(token);
 
     }
