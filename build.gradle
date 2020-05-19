@@ -9,6 +9,13 @@ version '1.0-SNAPSHOT'
 
 mainClassName="BookingService"
 
+compileJava.options.encoding = 'UTF-8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+
 repositories {
     mavenCentral()
     maven {
@@ -58,6 +65,8 @@ dependencies {
     compile 'mysql:mysql-connector-java:5.1.41'
 
     compile 'org.jdom:jdom2:2.0.6'
+
+    compile 'javax.mail:mail:1.4.7'
 
     compile 'com.sun.org.apache.xml.internal:resolver:20050927'
     compile files('CacheDB.jar')

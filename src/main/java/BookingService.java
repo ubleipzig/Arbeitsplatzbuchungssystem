@@ -84,7 +84,7 @@ public class BookingService {
         if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
         SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select area from areas where institution = '"+institution+"'", "bookingservice");
+        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct area from workspace where institution = '"+institution+"'", "bookingservice");
 
         for(HashMap area:list) {
 
@@ -128,7 +128,7 @@ public class BookingService {
      * @param token
      * @return
      */
-    private String[] do_booking(String institution, String area, String day, String month, String year, String timeslot, String readernumber, String token) {
+    private String[] do_booking(String institution, String area, String day, String month, String year, String timeslot, String readernumber, String token, List<String> fitting) {
         String hour = timeslot.split("-")[0].substring(0, 2);
         String minute = timeslot.split("-")[0].substring(2);
 
@@ -149,7 +149,7 @@ public class BookingService {
             e.printStackTrace();
         }
 
-        return do_booking(institution, area, day, month, year, hour, minute, ""+dif_min, readernumber, token);
+        return do_booking(institution, area, day, month, year, hour, minute, ""+dif_min, readernumber, token, fitting);
     }
 
     /**
@@ -167,7 +167,7 @@ public class BookingService {
      * @param token
      * @return
      */
-    private String[] do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token) {
+    private String[] do_booking(String institution, String area, String day, String month, String year, String hour, String minute, String duration, String readernumber, String token, List<String> fitting) {
 
         /**
          * Verfahrensweise:
@@ -177,7 +177,8 @@ public class BookingService {
          *
          */
 
-        String bookingArray[] = {"",""};
+        //bookingcode, workspaceid, emailadress
+        String bookingArray[] = {"","",""};
 
         //convert day|month|year|hour|minute to Timestamp
         Calendar cal = Calendar.getInstance();
@@ -190,8 +191,20 @@ public class BookingService {
 
         if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
+        ArrayList<HashMap<String, Object>> result = new ArrayList<>();
+
         SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' and area = '"+area.trim()+"'", "bookingservice");
+        if(fitting.isEmpty())
+            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' and area = '"+area.trim()+"'", "bookingservice");
+        else
+        {
+            String fitting_query = "";
+            for(String f:fitting) fitting_query+= "and fitting like '%"+f+"%'";
+
+            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' and area = '"+area.trim()+"' "+fitting_query, "bookingservice");
+        }
+
+        Collections.shuffle(result);
 
         boolean found_workplace = false;
 
@@ -219,11 +232,25 @@ public class BookingService {
             bookingArray[0] = UUID.randomUUID().toString();
             bookingArray[1] = String.valueOf(workspace_id);
 
+            String email = new LiberoManager(p).getMailAdress(readernumber, token);
+            //sendMail(email);
+
+            bookingArray[2] = email;
+
             SQLHub hub_intern = new SQLHub(p);
             hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"')", "bookingservice");
         }
 
         return bookingArray;
+    }
+
+    private void sendMail(String address) {
+        try {
+            QuickMail.sendMail("mailservice@ub.uni-leipzig.de", "mailservice", address, "Sie haben einen Arbeitsplatz gebucht.", "Arbeitsplatzbuchung an der UBL");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void booking(RoutingContext rc) {
@@ -236,17 +263,19 @@ public class BookingService {
         //String minute = rc.request().formAttributes().get("from_minute");
         //String duration = rc.request().formAttributes().get("duration");
         String timeslot = rc.request().formAttributes().get("timeslot");
+        List<String> fitting = rc.request().formAttributes().getAll("fitting");
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
 
         //System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
 
-        //String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token);
-        String bookingArray[] = do_booking(institution, area, day, month, year, timeslot, readernumber, token);
+        //String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token, fitting);
+        String bookingArray[] = do_booking(institution, area, day, month, year, timeslot, readernumber, token, fitting);
 
         JsonObject json = new JsonObject();
         json.put("bookingCode", bookingArray[0]);
         json.put("workspaceId", bookingArray[1]);
+        json.put("email", bookingArray[2]);
 
         rc.response().end(json.encodePrettily());
 
@@ -266,7 +295,7 @@ public class BookingService {
         if(tokenmap.containsKey(readernumber)) {
             if (tokenmap.get(readernumber).equals(token)) {
                 tokenmap.remove(readernumber);
-                LiberoManager.getInstance().close(token);
+                new LiberoManager(p).close(token);
             }
         }
 
@@ -285,8 +314,8 @@ public class BookingService {
         String password = rc.request().formAttributes().get("password");
 
         //Zugriff auf Libero-Manager, ermittle Token für das Login mit gewählter LKN und Passwort
-        LiberoManager lm = LiberoManager.getInstance(p);
-        String token = lm.login(readernumber, password);
+
+        String token = new LiberoManager(p).login(readernumber, password);
 
         //Wenn token==null, dann war der Login nicht möglich
         if(token==null) token="null";
