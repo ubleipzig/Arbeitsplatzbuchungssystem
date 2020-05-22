@@ -38,7 +38,7 @@ public class LiberoManager {
         wachtl.setLibraryServiceURL(p.getProperty("library_url"));
 
         String token = wachtl.getAuthSoapClient().patronLogin(readernumber, password).getToken();
-
+        if(token==null||token.equals("null")) return "null";
         String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();
 
         boolean is_in_category = false;

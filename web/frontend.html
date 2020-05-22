@@ -70,6 +70,22 @@
         }
 
         function do_reservation() {
+
+            var d1 = $("#from_date").val();
+
+            var t1 = $("#from_time").val();
+            var v1 = $("#from_time").attr("min");
+            var v2 = $("#from_time").attr("max");
+
+            var t2 = $("#until_time").val();
+            var w1 = $("#until_time").attr("min");
+            var w2 = $("#until_time").attr("max");
+
+            if(t1<v1||t1>v2||t2<w1||t2>w2||t2<t1||d1=="") {
+                alert("Zeit-Fehler!");
+                return;
+            }
+
             $.ajax({
                 url: proto+'://'+url+'/booking/booking',
                 type: 'post',
