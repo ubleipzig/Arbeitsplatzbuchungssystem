@@ -23,7 +23,7 @@
     </style>
     <script>
 
-        //var url = "172.18.113.237";
+        //var url = "seats.ub.uni-leipzig.de/api";
         var url = "localhost:12105";
         var proto = "http";
 
@@ -31,6 +31,7 @@
         var token = "";
 
         var booked_workspace = 0, bookingCode = 0, email = "";
+        var from = "", until="";
 
         function reservation() {
             $("#startdiv").load("login.html");
@@ -80,9 +81,12 @@
                     booked_workspace = jsondata.workspaceId;
                     bookingCode = jsondata.bookingCode;
                     email = jsondata.email;
-                    $("#startdiv").addClass("starter-template");
-                    $("#startdiv").load("result.html");
 
+                    if(booked_workspace=="") alert("Leider konnte kein freier Platz zu Ihren Konditionen gefunden werden!");
+                    else {
+                        $("#startdiv").addClass("starter-template");
+                        $("#startdiv").load("result.html");
+                    }
 
                 }
             });
@@ -94,6 +98,7 @@
                 type: 'get',
                 success: function(data) {
                     $("#area option").remove();
+                        $("#area").append("<option value=\"no selection\">Keine Auswahl</option>");
                         data.split("#").forEach(function(e){
                             $("#area").append("<option value=\""+e+"\">"+e+"</option>");
                         });
@@ -104,9 +109,8 @@
                 url: proto+'://'+url+'/booking/timeslots?institution='+$("#institution").val(),
                 type: 'get',
                 success: function(data) {
-                    $("#timeslot option").remove();
-                    $("#timeslot").append(data);
-
+                    $("#from_time").attr({"min": data.from, "max": data.until});
+                    $("#until_time").attr({"min": data.from, "max": data.until});
                 }
             });
 

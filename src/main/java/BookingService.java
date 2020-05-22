@@ -36,7 +36,7 @@ public class BookingService {
     HashMap<String, String> tokenmap = new HashMap<>();
 
     //Hashmap zur Speicherung der Zeitslots nach Institution
-    HashMap<String, String> timeslots = new HashMap<>();
+    HashMap<String, JsonObject> timeslots = new HashMap<>();
 
     public BookingService() {
 
@@ -67,6 +67,26 @@ public class BookingService {
         router.get("/booking/areas").handler(this::areas);
         router.route("/booking/timeslots*").handler(BodyHandler.create());
         router.get("/booking/timeslots").handler(this::timeslots);
+        router.route("/booking/institutions*").handler(BodyHandler.create());
+        router.get("/booking/institutions").handler(this::institutions);
+    }
+
+    private void institutions(RoutingContext rc) {
+
+        String retval = "";
+
+        SQLHub hub = new SQLHub(p);
+        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct institution from workspace", "bookingservice");
+
+        for(HashMap institutions:list) {
+            retval+=institutions.get("institution")+"#";
+        }
+        if(retval.contains("#"))
+            retval = retval.substring(0, retval.length()-1);
+
+        rc.response().headers().add("Content-type","html/text");
+
+        rc.response().end(retval);
     }
 
     /**
@@ -108,8 +128,8 @@ public class BookingService {
 
         if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
-        rc.response().headers().add("Content-type","html/text");
-        rc.response().end(timeslots.get(institution));
+        rc.response().headers().add("Content-type","application/json");
+        rc.response().end(timeslots.get(institution).encodePrettily());
 
     }
 
@@ -193,15 +213,19 @@ public class BookingService {
 
         ArrayList<HashMap<String, Object>> result = new ArrayList<>();
 
+        String area_query = "";
+
+        if(!area.equals("no selection")) area_query = "and area = '"+area.trim()+"'";
+
         SQLHub hub = new SQLHub(p);
         if(fitting.isEmpty())
-            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' and area = '"+area.trim()+"'", "bookingservice");
+            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
         else
         {
             String fitting_query = "";
             for(String f:fitting) fitting_query+= "and fitting like '%"+f+"%'";
 
-            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' and area = '"+area.trim()+"' "+fitting_query, "bookingservice");
+            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query, "bookingservice");
         }
 
         Collections.shuffle(result);
@@ -213,10 +237,10 @@ public class BookingService {
             workspace_id = (int)workspace.get("id");
             SQLHub hub_intern = new SQLHub(p);
             if(
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and start >= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end >= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and start >= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and end >= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
+                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()
             )
             {
                 //System.out.println("Platz mit der ID "+workspace_id+" gefunden!");
@@ -233,20 +257,39 @@ public class BookingService {
             bookingArray[1] = String.valueOf(workspace_id);
 
             String email = new LiberoManager(p).getMailAdress(readernumber, token);
-            //sendMail(email);
+            sendMail(email, readernumber, institution, area, workspace_id, day, month, year, start_sql, end_sql, bookingArray[0]);
 
             bookingArray[2] = email;
 
             SQLHub hub_intern = new SQLHub(p);
-            hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"')", "bookingservice");
+            hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode, institution) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"','"+institution.trim()+"')", "bookingservice");
         }
 
         return bookingArray;
     }
 
-    private void sendMail(String address) {
+    private void sendMail(String address, String readernumber, String institution, String area, int workspaceId, String day, String month, String year, Timestamp start, Timestamp end, String bookingCode) {
         try {
-            QuickMail.sendMail("mailservice@ub.uni-leipzig.de", "mailservice", address, "Sie haben einen Arbeitsplatz gebucht.", "Arbeitsplatzbuchung an der UBL");
+
+            FileInputStream fis = new FileInputStream("config/mail.template");
+            byte buffer[] = fis.readAllBytes();
+            fis.close();
+
+            String data = new String(buffer);
+            data = data.replaceAll("###readernumber###",readernumber);
+            data = data.replaceAll("###institution###",institution);
+            data = data.replaceAll("###area###",area);
+            data = data.replaceAll("###id###",String.valueOf(workspaceId));
+
+            String mydate = day+"."+month+"."+year;
+            data = data.replaceAll("###date###",mydate);
+
+            String mytimeslot = start.toGMTString()+" - "+end.toGMTString();
+            data = data.replaceAll("###timeslot###",mytimeslot);
+
+            data = data.replaceAll("###code###",bookingCode);
+
+            QuickMail.sendMail("mailservice@ub.uni-leipzig.de", "mailservice", address, data, "Arbeitsplatzbuchung an der UBL");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -256,18 +299,29 @@ public class BookingService {
     private void booking(RoutingContext rc) {
         String institution = rc.request().formAttributes().get("institution");
         String area = rc.request().formAttributes().get("area");
-        String day = rc.request().formAttributes().get("from_day");
-        String month = rc.request().formAttributes().get("from_month");
-        String year = rc.request().formAttributes().get("from_year");
+        //String day = rc.request().formAttributes().get("from_day");
+        //String month = rc.request().formAttributes().get("from_month");
+        //String year = rc.request().formAttributes().get("from_year");
         //String hour = rc.request().formAttributes().get("from_hour");
         //String minute = rc.request().formAttributes().get("from_minute");
         //String duration = rc.request().formAttributes().get("duration");
-        String timeslot = rc.request().formAttributes().get("timeslot");
+        //String timeslot = rc.request().formAttributes().get("timeslot");
+        String from_date = rc.request().formAttributes().get("from_date");
+        String from_time = rc.request().formAttributes().get("from_time");
+        String until_time = rc.request().formAttributes().get("until_time");
         List<String> fitting = rc.request().formAttributes().getAll("fitting");
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
 
         //System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
+
+        String year, month, day, timeslot;
+
+        year = from_date.split("-")[0];
+        month = from_date.split("-")[1];
+        day = from_date.split("-")[2];
+
+        timeslot = from_time.replaceAll(":","")+"-"+until_time.replaceAll(":","");
 
         //String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token, fitting);
         String bookingArray[] = do_booking(institution, area, day, month, year, timeslot, readernumber, token, fitting);
@@ -344,20 +398,20 @@ public class BookingService {
             e.printStackTrace();
         }
 
-        String option_template = "<option value=\"###val###\">###name###</option>";
-
-        //Lade die Zeitslots und verarbeite diese als Options-Elemente für das Select-Element
         try {
             Document doc = new SAXBuilder().build("config/timeslots.xml");
             String option_element = new String();
             for(Element e_inst:doc.getRootElement().getChildren("institution")) {
-                for(Element e_interval:e_inst.getChildren("interval")) {
-                    String cpy_option = option_template;
-                    cpy_option = cpy_option.replaceAll("###val###",e_interval.getAttributeValue("from").toString().replaceAll(":","")+"-"+e_interval.getAttributeValue("until").toString().replaceAll(":",""));
-                    cpy_option = cpy_option.replaceAll("###name###",e_interval.getAttributeValue("from")+"-"+e_interval.getAttributeValue("until"));
-                    option_element+=cpy_option;
-                }
-                timeslots.put(e_inst.getAttributeValue("name"), option_element);
+                Element e_interval = e_inst.getChild("interval");
+
+                JsonObject jso = new JsonObject();
+
+                jso.put("from", e_interval.getAttributeValue("from"));
+                jso.put("until", e_interval.getAttributeValue("until"));
+
+                timeslots.put(e_inst.getAttributeValue("name"), jso);
+
+
             }
         } catch (JDOMException e) {
             e.printStackTrace();

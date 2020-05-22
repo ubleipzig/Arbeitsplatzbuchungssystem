@@ -38,6 +38,7 @@ public class DBImporter {
             int c = 0;
             int id = 0;
             String institution = "", area = "", fitting = "";
+            boolean has_pc = false;
 
             for(String attr:line.split(";")) {
                 if(c==0) {
@@ -53,6 +54,7 @@ public class DBImporter {
                     if(attr.length()>=2) {
 
                         fitting += attr + ",";
+                        if(attr.equals("PC")) has_pc = true;
                     }
 
 
@@ -61,12 +63,13 @@ public class DBImporter {
                 c++;
             }
 
+            //if(!has_pc) fitting += "kein PC,";
 
-            fitting = cutcommata(fitting);
+            fitting = cutcommata(fitting.trim());
 
             System.out.println(id+"###"+institution+"###"+area+"###"+fitting);
 
-            hub.executeData("insert into workspace (id, institution, area, fitting) values ("+id+",'"+institution+"','"+area+"','"+fitting.trim()+"')", "bookingservice");
+            hub.executeData("insert into workspace (id, institution, area, fitting) values ("+id+",'"+institution.trim()+"','"+area.trim()+"','"+fitting.trim()+"')", "bookingservice");
 
         }
 

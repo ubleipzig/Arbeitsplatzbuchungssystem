@@ -7,8 +7,6 @@
             <div class="col-8">
                 <select id="institution" name="institution" class="custom-select" required="required" onchange="javascript:getAreas()">
                    <option>Bitte wählen...</option>
-                    <option value="BA">Bibliotheca Albertina</option>
-                    <option value="BMN">Bibliothek Medizin und Naturwissenschaften</option>
                 </select>
             </div>
         </div>
@@ -39,122 +37,31 @@
             <div class="col-8">
                 <div class="form-group row">
 
-                    <label for="from_day" class="col-1">Tag</label>
-                    <div class="col-2">
-                        <select id="from_day" name="from_day" class="custom-select">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            <option value="11">11</option>
-                            <option value="12">12</option>
-                            <option value="13">13</option>
-                            <option value="14">14</option>
-                            <option value="15">15</option>
-                            <option value="16">16</option>
-                            <option value="17">17</option>
-                            <option value="18">18</option>
-                            <option value="19">19</option>
-                            <option value="20">20</option>
-                            <option value="21">21</option>
-                            <option value="22">22</option>
-                            <option value="23">23</option>
-                            <option value="24">24</option>
-                            <option value="25">25</option>
-                            <option value="26">26</option>
-                            <option value="27">27</option>
-                            <option value="28">28</option>
-                            <option value="29">29</option>
-                            <option value="30">30</option>
-                            <option value="31">31</option>
-                        </select>
+                    <label for="from_date" class="col-1">Datum</label>
+                    <div class="col-3">
+                        <input id="from_date" name="from_date" type="date"/>
                     </div>
 
-                    <label for="from_month" class="col-1">Monat</label>
+                    <label for="from_time" class="col-2">Uhrzeit von</label>
                     <div class="col-2">
-                        <select id="from_month" name="from_month" class="custom-select">
-                            <option value="1">Januar</option>
-                            <option value="2">Februar</option>
-                            <option value="3">März</option>
-                            <option value="4">April</option>
-                            <option value="5">Mai</option>
-                            <option value="6">Juni</option>
-                            <option value="7">Juli</option>
-                            <option value="8">August</option>
-                            <option value="9">September</option>
-                            <option value="10">Oktober</option>
-                            <option value="11">November</option>
-                            <option value="12">Dezember</option>
-                        </select>
+                        <input id="from_time" name="from_time" type="time" />
                     </div>
 
-                    <label for="from_year" class="col-1">Jahr</label>
+                    <label for="until_time" class="col-2">Uhrzeit bis</label>
                     <div class="col-2">
-                        <select id="from_year" name="from_year" class="custom-select">
-                            <option value="2020">2020</option>
-                            <option value="2021">2021</option>
-                        </select>
+                        <input id="until_time" name="until_time" type="time"/>
                     </div>
+
+
+
                 </div>
-            </div>
-        </div>
-
-        <div class="form-group row">
-            <div class="col-4"></div>
-            <div class="col-8">
-                <select id="timeslot" name="timeslot" class="custom-select"></select>
             </div>
         </div>
 <!--
         <div class="form-group row">
             <div class="col-4"></div>
             <div class="col-8">
-                <div class="form-group row">
-                    <label for="from_hour" class="col-1">Stunde</label>
-                    <div class="col-2">
-                        <select id="from_hour" name="from_hour" class="custom-select">
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            <option value="11">11</option>
-                            <option value="12">12</option>
-                            <option value="13">13</option>
-                            <option value="14">14</option>
-                            <option value="15">15</option>
-                            <option value="16">16</option>
-                            <option value="17">17</option>
-                            <option value="18">18</option>
-                            <option value="19">19</option>
-                            <option value="20">20</option>
-                        </select>
-                    </div>
-
-                    <label for="from_minute" class="col-1">Minute</label>
-                    <div class="col-2">
-                        <select id="from_minute" name="from_minute" class="custom-select">
-                            <option value="0">00</option>
-                            <option value="15">15</option>
-                            <option value="30">30</option>
-                            <option value="45">45</option>
-                        </select>
-                    </div>
-
-                    <label for="duration" class="col-1">Dauer</label>
-                    <div class="col-2">
-                        <select id="duration" name="duration" class="custom-select">
-                            <option value="30">30 Minuten</option>
-                            <option value="60">1 Stunde</option>
-                            <option value="90">1.5 Stunden</option>
-                            <option value="120">2 Stunden</option>
-                        </select>
-                    </div>
-                </div>
+                <select id="timeslot" name="timeslot" class="custom-select"></select>
             </div>
         </div>
 -->
@@ -164,6 +71,18 @@
     <script>
         $("#readernumber").val(readernumber);
         $("#token").val(token);
+
+        $.ajax({
+            url: proto+'://'+url+'/booking/institutions',
+            type: 'get',
+            success: function(data) {
+
+                data.split("#").forEach(function(e){
+                    $("#institution").append("<option value=\""+e+"\">"+e+"</option>");
+                });
+            }
+        });
+
     </script>
 </form>
 
