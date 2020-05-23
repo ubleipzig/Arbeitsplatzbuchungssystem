@@ -81,7 +81,7 @@
             var w1 = $("#until_time").attr("min");
             var w2 = $("#until_time").attr("max");
 
-            if(t1<v1||t1>v2||t2<w1||t2>w2||t2<t1||d1=="") {
+            if(t1<v1||t1>v2||t2<w1||t2>w2||t2<t1||d1==""||t1==t2) {
                 alert("Zeit-Fehler!");
                 return;
             }
@@ -125,8 +125,8 @@
                 url: proto+'://'+url+'/booking/timeslots?institution='+$("#institution").val(),
                 type: 'get',
                 success: function(data) {
-                    $("#from_time").attr({"min": data.from, "max": data.until});
-                    $("#until_time").attr({"min": data.from, "max": data.until});
+                    $("#from_time").attr({"min": data.from, "max": data.until, "value": data.from});
+                    $("#until_time").attr({"min": data.from, "max": data.until, "value": data.from});
                 }
             });
 

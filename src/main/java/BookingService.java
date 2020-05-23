@@ -223,7 +223,12 @@ public class BookingService {
         else
         {
             String fitting_query = "";
-            for(String f:fitting) fitting_query+= "and fitting like '%"+f+"%'";
+            for(String f:fitting) {
+                if(f.equals("kein PC"))
+                    fitting_query = "and fitting not like '%PC%'";
+                else
+                    fitting_query+= "and fitting like '%"+f+"%'";
+            }
 
             result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query, "bookingservice");
         }
