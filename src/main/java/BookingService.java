@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -101,8 +102,6 @@ public class BookingService {
         String institution = rc.request().getParam("institution");
         String retval = "";
 
-        if(institution.equals("BA")) institution = "Bibliotheca Albertina";
-
         SQLHub hub = new SQLHub(p);
         ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct area from workspace where institution = '"+institution+"'", "bookingservice");
 
@@ -125,8 +124,6 @@ public class BookingService {
      */
     private void timeslots(RoutingContext rc) {
         String institution = rc.request().getParam("institution");
-
-        if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
         rc.response().headers().add("Content-type","application/json");
         rc.response().end(timeslots.get(institution).encodePrettily());
@@ -202,14 +199,12 @@ public class BookingService {
 
         //convert day|month|year|hour|minute to Timestamp
         Calendar cal = Calendar.getInstance();
-        cal.set(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minute));
+        cal.set(Integer.parseInt(year), Integer.parseInt(month)-1, Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minute));
         Timestamp start_sql = new Timestamp(cal.getTimeInMillis());
 
         //convert duration to milliseconds
         long duration_ms = Integer.parseInt(duration)*60*1000;
         Timestamp end_sql = new Timestamp(cal.getTimeInMillis()+duration_ms);
-
-        if(institution.equals("BA")) institution = "Bibliotheca Albertina";
 
         ArrayList<HashMap<String, Object>> result = new ArrayList<>();
 
@@ -268,6 +263,8 @@ public class BookingService {
 
             SQLHub hub_intern = new SQLHub(p);
             hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode, institution) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"','"+institution.trim()+"')", "bookingservice");
+            hub_intern.executeData("insert into user_details (readernumber, bt_start, bt_end, institution) values ('"+readernumber+"','"+start_sql+"','"+end_sql+"','"+institution.trim()+"')", "bookingservice");
+            hub_intern.executeData("update user set past = past+"+Integer.parseInt(duration)+" where readernumber = '"+readernumber+"'", "bookingservice");
         }
 
         return bookingArray;
@@ -289,7 +286,7 @@ public class BookingService {
             String mydate = day+"."+month+"."+year;
             data = data.replaceAll("###date###",mydate);
 
-            String mytimeslot = start.toGMTString()+" - "+end.toGMTString();
+            String mytimeslot = start.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"))+" - "+end.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
             data = data.replaceAll("###timeslot###",mytimeslot);
 
             data = data.replaceAll("###code###",bookingCode);
@@ -387,7 +384,7 @@ public class BookingService {
             //prüfe auf existenz des nutzers in der DB und lege diesen ggf. an
             SQLHub hub = new SQLHub(p);
             if(hub.getSingleData("select * from user where readernumber = '"+readernumber+"'", "bookingservice").get("readernumber")==null)
-                hub.executeData("insert into user (readernumber, quota) values ('"+readernumber.trim()+"',600)", "bookingservice");
+                hub.executeData("insert into user (readernumber, quota, past) values ('"+readernumber.trim()+"',600,0)", "bookingservice");
 
         }
 
