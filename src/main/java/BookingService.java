@@ -1,6 +1,7 @@
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -16,6 +17,7 @@ import org.jdom2.input.SAXBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,6 +41,9 @@ public class BookingService {
     //Hashmap zur Speicherung der Zeitslots nach Institution
     HashMap<String, JsonObject> timeslots = new HashMap<>();
 
+    //Hashmap zur Speicherung der Nutzerkategorie
+    public static HashMap<String, String> categorymap = new HashMap<>();
+
     public BookingService() {
 
         init();
@@ -47,7 +52,11 @@ public class BookingService {
 
     //Initialisiere Vertx-basierte API-Endpunkte
     private void initNetwork() {
-        Vertx vertx = Vertx.vertx();
+
+        final VertxOptions vertOptions = new VertxOptions();
+        vertOptions.setMaxEventLoopExecuteTime(9000000000L);
+
+        Vertx vertx = Vertx.vertx(vertOptions);
         Router router = Router.router(vertx);
         vertx.createHttpServer().requestHandler(router).listen(12105, result -> {
             if (result.succeeded()) {
@@ -252,6 +261,11 @@ public class BookingService {
 
         if(found_workplace) {
 
+            if(p.getProperty("check_concurrently_booking", "true").equals("true")) {
+                boolean check = checkConcurrentlyBooking(readernumber, start_sql, end_sql, institution);
+                if (check) return bookingArray;
+            }
+
             //generate bookingcode, uses randomized UUID
             bookingArray[0] = UUID.randomUUID().toString();
             bookingArray[1] = String.valueOf(workspace_id);
@@ -263,11 +277,35 @@ public class BookingService {
 
             SQLHub hub_intern = new SQLHub(p);
             hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode, institution) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"','"+institution.trim()+"')", "bookingservice");
-            hub_intern.executeData("insert into user_details (readernumber, bt_start, bt_end, institution) values ('"+readernumber+"','"+start_sql+"','"+end_sql+"','"+institution.trim()+"')", "bookingservice");
             hub_intern.executeData("update user set past = past+"+Integer.parseInt(duration)+" where readernumber = '"+readernumber+"'", "bookingservice");
         }
 
         return bookingArray;
+    }
+
+    private boolean checkConcurrentlyBooking(String readernumber, Timestamp start, Timestamp end, String institution) {
+
+        boolean trapped = false;
+
+        SQLHub sqlhub = new SQLHub(p);
+        ArrayList<HashMap<String, Object>> resultlist = sqlhub.getMultiData("select start, end from booking where readernumber = '"+readernumber+"' and institution = '"+institution+"'","bookingservice");
+        for(HashMap<String, Object> entry:resultlist)
+        {
+            long a = ((Timestamp)entry.get("start")).getTime();
+            long b = ((Timestamp)entry.get("end")).getTime();
+
+            long a1 = start.getTime();
+            long b1 = end.getTime();
+
+            if(a1<=a&&b1>=b) trapped = true;
+            if(a1>=a&&b1<=b) trapped = true;
+            if(a1>=a&&a1<=b&&b1>=b) trapped = true;
+            if(a1<=a&&b1>=a&&b1<=b) trapped = true;
+
+            if(trapped) return true;
+        }
+
+        return false;
     }
 
     private void sendMail(String address, String readernumber, String institution, String area, int workspaceId, String day, String month, String year, Timestamp start, Timestamp end, String bookingCode) {
@@ -352,6 +390,7 @@ public class BookingService {
             if (tokenmap.get(readernumber).equals(token)) {
                 tokenmap.remove(readernumber);
                 new LiberoManager(p).close(token);
+                categorymap.remove(readernumber);
             }
         }
 

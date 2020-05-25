@@ -41,6 +41,8 @@ public class LiberoManager {
         if(token==null||token.equals("null")) return "null";
         String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();
 
+        BookingService.categorymap.put(readernumber, user_category);
+
         boolean is_in_category = false;
 
         for(String c:p.getProperty("categories").split(","))
