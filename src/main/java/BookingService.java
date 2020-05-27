@@ -204,7 +204,7 @@ public class BookingService {
          */
 
         //bookingcode, workspaceid, emailadress
-        String bookingArray[] = {"","",""};
+        String bookingArray[] = {"","","",""}; //UUID, workspaceId, email, msg
 
         //convert day|month|year|hour|minute to Timestamp
         Calendar cal = Calendar.getInstance();
@@ -223,7 +223,7 @@ public class BookingService {
 
         SQLHub hub = new SQLHub(p);
         if(fitting.isEmpty())
-            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
+            result = hub.getMultiData("select id, area from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
         else
         {
             String fitting_query = "";
@@ -234,7 +234,7 @@ public class BookingService {
                     fitting_query+= "and fitting like '%"+f+"%'";
             }
 
-            result = hub.getMultiData("select id from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query, "bookingservice");
+            result = hub.getMultiData("select id, area from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query, "bookingservice");
         }
 
         Collections.shuffle(result);
@@ -242,8 +242,10 @@ public class BookingService {
         boolean found_workplace = false;
 
         int workspace_id = -1;
+        String found_area = "";
         for(HashMap<String, Object> workspace:result) {
             workspace_id = (int)workspace.get("id");
+            found_area = (String)workspace.get("area");
             SQLHub hub_intern = new SQLHub(p);
             if(
                     hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
@@ -261,9 +263,14 @@ public class BookingService {
 
         if(found_workplace) {
 
+            area = found_area;
+
             if(p.getProperty("check_concurrently_booking", "true").equals("true")) {
                 boolean check = checkConcurrentlyBooking(readernumber, start_sql, end_sql, institution);
-                if (check) return bookingArray;
+                if (check) {
+                    bookingArray[3] = "concurrently_booking";
+                    return bookingArray;
+                }
             }
 
             //generate bookingcode, uses randomized UUID
@@ -370,6 +377,7 @@ public class BookingService {
         json.put("bookingCode", bookingArray[0]);
         json.put("workspaceId", bookingArray[1]);
         json.put("email", bookingArray[2]);
+        json.put("message", bookingArray[3]);
 
         rc.response().end(json.encodePrettily());
 
@@ -410,10 +418,16 @@ public class BookingService {
 
         //Zugriff auf Libero-Manager, ermittle Token für das Login mit gewählter LKN und Passwort
 
-        String token = new LiberoManager(p).login(readernumber, password);
+        String logvalue[] = new LiberoManager(p).login(readernumber, password);
+
+        String token = logvalue[0];
+        String msg = logvalue[1];
 
         //Wenn token==null, dann war der Login nicht möglich
-        if(token==null) token="null";
+        if(token==null||msg.equals("Wrong readernumber or password")) {
+            token="null";
+            msg = "Lesekartennummer oder Password falsch.";
+        }
 
         if(!token.equals("null")) {
 
@@ -427,7 +441,15 @@ public class BookingService {
 
         }
 
-        rc.response().end(token);
+        if(msg.equals("Wrong category")) msg = "Leider gibt es für Ihre Nutzerkategorie keine Buchungserlaubnis.";
+
+        JsonObject answer_object = new JsonObject();
+        answer_object.put("token", token);
+        answer_object.put("msg", msg);
+
+        rc.response().headers().add("Content-type","application/json");
+
+        rc.response().end(answer_object.encodePrettily());
     }
 
     //Initialisierung - Lade Konfiguration aus config.properties

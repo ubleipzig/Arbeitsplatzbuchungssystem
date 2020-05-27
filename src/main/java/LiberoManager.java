@@ -32,13 +32,18 @@ public class LiberoManager {
         return email;
     }
 
-    public String login(String readernumber, String password) {
+    public String[] login(String readernumber, String password) {
         Wachtl wachtl = new Wachtl();
         wachtl.setAuthenticatServiceURL(p.getProperty("authentication_url"));
         wachtl.setLibraryServiceURL(p.getProperty("library_url"));
 
+        String msg = "";
+
         String token = wachtl.getAuthSoapClient().patronLogin(readernumber, password).getToken();
-        if(token==null||token.equals("null")) return "null";
+        if(token==null||token.equals("null")) {
+            String retval[] = {"null","Wrong readernumber or password"};
+            return retval;
+        }
         String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();
 
         BookingService.categorymap.put(readernumber, user_category);
@@ -50,9 +55,14 @@ public class LiberoManager {
             if(user_category.equals(c.trim())) is_in_category = true;
         }
 
-        if(!is_in_category) token = "null";
+        if(!is_in_category) {
+            token = "null";
+            msg = "Wrong category";
+        }
 
-        return token;
+        String retval[] = {token, msg};
+
+        return retval;
     }
 
     public void close(String token) {
