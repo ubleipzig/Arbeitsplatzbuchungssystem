@@ -79,6 +79,8 @@ public class BookingService {
         router.get("/booking/timeslots").handler(this::timeslots);
         router.route("/booking/institutions*").handler(BodyHandler.create());
         router.get("/booking/institutions").handler(this::institutions);
+        router.route("/booking/storno*").handler(BodyHandler.create());
+        router.post("/booking/storno").handler(this::storno);
     }
 
     private void institutions(RoutingContext rc) {
@@ -378,6 +380,53 @@ public class BookingService {
         json.put("workspaceId", bookingArray[1]);
         json.put("email", bookingArray[2]);
         json.put("message", bookingArray[3]);
+
+        rc.response().end(json.encodePrettily());
+
+    }
+
+    private void storno(RoutingContext rc) {
+        String readernumber = rc.request().formAttributes().get("readernumber");
+        String password = rc.request().formAttributes().get("password");
+        String bookingcode = rc.request().formAttributes().get("bookingcode");
+
+        String logvalue[] = new LiberoManager(p).login(readernumber, password);
+
+        String token = logvalue[0];
+        String msg = logvalue[1];
+
+        //Wenn token==null, dann war der Login nicht möglich
+        if(token==null||msg.equals("Wrong readernumber or password")) {
+            token="null";
+            msg = "Lesekartennummer oder Password falsch.";
+        }
+
+        if(!token.equals("null")) {
+            SQLHub hub = new SQLHub(p);
+            HashMap<String, Object> map = hub.getSingleData("select * from booking where bookingCode='"+bookingcode+"' and readernumber='"+readernumber+"'", "bookingservice");
+            if(map.get("bookingCode")!=null)
+            {
+                Timestamp a = (Timestamp)map.get("start");
+                Timestamp b = (Timestamp)map.get("end");
+
+                long duration = (b.getTime() - a.getTime())/(1000*60); //in minutes
+
+                SQLHub hub2 = new SQLHub(p);
+                hub2.executeData("delete from booking where bookingCode='"+bookingcode+"' and readernumber='"+readernumber+"'","bookingservice");
+                hub2.executeData("update user set past = past-"+duration+" where readernumber = '"+readernumber+"'", "bookingservice");
+
+                msg = "Ihre Buchung wurde gelöscht.";
+            }
+            else {
+                msg = "Der angegebene Buchungscode wurde nicht gefunden!";
+            }
+
+        }
+
+        rc.response().headers().add("Content-type", "application/json");
+
+        JsonObject json = new JsonObject();
+        json.put("message", msg);
 
         rc.response().end(json.encodePrettily());
 

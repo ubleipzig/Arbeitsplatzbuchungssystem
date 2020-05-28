@@ -13,7 +13,7 @@
         <interval from="10:00" until="16:00"/>
     </institution>
     <institution name="Bibliothek Orientwissenschaften">
-        <interval from="10:00" until="18:00"/>
+        <interval from="09:00" until="18:00"/>
     </institution>
     <institution name="Bibliothek Kunst">
         <interval from="10:00" until="16:00"/>
@@ -28,6 +28,6 @@
         <interval from="10:00" until="16:00"/>
     </institution>
     <institution name="Bibliothek Erziehungs- und Sportwissenschaft">
-        <interval from="10:00" until="18:00"/>
+        <interval from="09:00" until="18:00"/>
     </institution>
 </institutions>
