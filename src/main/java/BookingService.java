@@ -1,3 +1,4 @@
+import au.com.libero.libraryapi.types.Routing;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -81,6 +82,8 @@ public class BookingService {
         router.get("/booking/institutions").handler(this::institutions);
         router.route("/booking/storno*").handler(BodyHandler.create());
         router.post("/booking/storno").handler(this::storno);
+        router.route("/booking/checkdate*").handler(BodyHandler.create());
+        router.post("/booking/checkdate").handler(this::checkdate);
     }
 
     private void institutions(RoutingContext rc) {
@@ -91,6 +94,7 @@ public class BookingService {
         ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct institution from workspace", "bookingservice");
 
         for(HashMap institutions:list) {
+            if(institutions.get("institution").equals("Bibliothek Rechtswissenschaft")) continue;
             retval+=institutions.get("institution")+"#";
         }
         if(retval.contains("#"))
@@ -130,7 +134,7 @@ public class BookingService {
 
 
     /**
-     * Retournierung der Zeitslots nach Standort in fertigen Options-Block aus der Hashmap
+     * Retournierung der Zeitslots nach Standort
      * @param rc
      */
     private void timeslots(RoutingContext rc) {
@@ -385,6 +389,50 @@ public class BookingService {
 
     }
 
+    private void checkdate(RoutingContext rc) {
+        String date = rc.getBodyAsJson().getString("date");
+        String institution = rc.getBodyAsJson().getString("institution");
+
+        Calendar cal = Calendar.getInstance();
+        //year, month, date
+        int year = Integer.parseInt(date.split("-")[0]);
+        int month = Integer.parseInt(date.split("-")[1])-1;
+        int day = Integer.parseInt(date.split("-")[2]);
+
+        cal.set(year, month, day);
+        int dow = cal.get(Calendar.DAY_OF_WEEK); //Sonntag = 1
+
+        String closuredays = timeslots.get(institution).getString("recclosuredays");
+        String specclosuredays = timeslots.get(institution).getString("specclosuredays");
+
+        if(specclosuredays!=null) {
+            for (String spec : specclosuredays.split(",")) {
+
+                int s_year = Integer.parseInt(spec.split("[.]")[2]);
+                int s_month = Integer.parseInt(spec.split("[.]")[1])-1;
+                int s_day = Integer.parseInt(spec.split("[.]")[0]);
+
+                if (s_day == day && s_month == month && s_year == year) {
+                    rc.response().end("false");
+                    return;
+                }
+            }
+        }
+
+        if(closuredays==null) {
+            rc.response().end("true");
+            return;
+        }
+
+        for(String cd:closuredays.split(","))
+            if(dow==Integer.parseInt(cd))
+                rc.response().end("false");
+
+
+        rc.response().end("true");
+
+    }
+
     private void storno(RoutingContext rc) {
         String readernumber = rc.request().formAttributes().get("readernumber");
         String password = rc.request().formAttributes().get("password");
@@ -521,8 +569,16 @@ public class BookingService {
                 jso.put("from", e_interval.getAttributeValue("from"));
                 jso.put("until", e_interval.getAttributeValue("until"));
 
-                timeslots.put(e_inst.getAttributeValue("name"), jso);
+                String e_recclosuredays = e_inst.getChildText("recurrentClosureDays");
+                String e_specclosuredays = e_inst.getChildText("specialClosureDays");
 
+                if(e_recclosuredays!=null)
+                    jso.put("recclosuredays", e_recclosuredays.trim());
+
+                if(e_specclosuredays!=null)
+                    jso.put("specclosuredays", e_specclosuredays.trim());
+
+                timeslots.put(e_inst.getAttributeValue("name"), jso);
 
             }
         } catch (JDOMException e) {
