@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
@@ -321,6 +322,36 @@ public class BookingService {
         return false;
     }
 
+    private void sendStornoMail(String address, String readernumber, String institution, int workspaceId, Timestamp start, Timestamp end) {
+        try {
+
+            FileInputStream fis = new FileInputStream("config/storno.template");
+            byte buffer[] = fis.readAllBytes();
+            fis.close();
+
+            String data = new String(buffer);
+            data = data.replaceAll("###readernumber###",readernumber);
+            data = data.replaceAll("###institution###",institution);
+            data = data.replaceAll("###id###",String.valueOf(workspaceId));
+
+            String day = String.valueOf(start.toLocalDateTime().getDayOfMonth()).length()<2 ? "0"+start.toLocalDateTime().getDayOfMonth() : ""+start.toLocalDateTime().getDayOfMonth();
+            String month = String.valueOf(start.toLocalDateTime().getMonth().getValue()).length()<2 ? "0"+start.toLocalDateTime().getMonth().getValue() : ""+start.toLocalDateTime().getMonth().getValue();
+            String year = String.valueOf(start.toLocalDateTime().getYear());
+
+            String mydate = day+"."+month+"."+year;
+            data = data.replaceAll("###date###",mydate);
+
+            String mytimeslot = start.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"))+" - "+end.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            data = data.replaceAll("###timeslot###",mytimeslot);
+
+
+            QuickMail.sendMail("mailservice@ub.uni-leipzig.de", "UBL Service", address, data, "Stornierung");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
     private void sendMail(String address, String readernumber, String institution, String area, int workspaceId, String day, String month, String year, Timestamp start, Timestamp end, String bookingCode) {
         try {
 
@@ -342,7 +373,7 @@ public class BookingService {
 
             data = data.replaceAll("###code###",bookingCode);
 
-            QuickMail.sendMail("mailservice@ub.uni-leipzig.de", "mailservice", address, data, "Arbeitsplatzbuchung an der UBL");
+            QuickMail.sendMail("mailservice@ub.uni-leipzig.de", "UBL Service", address, data, "Arbeitsplatzbuchung an der UBL");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -457,6 +488,10 @@ public class BookingService {
                 Timestamp a = (Timestamp)map.get("start");
                 Timestamp b = (Timestamp)map.get("end");
 
+                String institution = (String)map.get("institution");
+                int workspaceId = (int)map.get("workspaceId");
+
+
                 long duration = (b.getTime() - a.getTime())/(1000*60); //in minutes
 
                 SQLHub hub2 = new SQLHub(p);
@@ -464,6 +499,10 @@ public class BookingService {
                 hub2.executeData("update user set past = past-"+duration+" where readernumber = '"+readernumber+"'", "bookingservice");
 
                 msg = "Ihre Buchung wurde gelöscht.";
+
+                String email = new LiberoManager(p).getMailAdress(readernumber, token);
+                sendStornoMail(email, readernumber, institution, workspaceId, a, b);
+
             }
             else {
                 msg = "Der angegebene Buchungscode wurde nicht gefunden!";
