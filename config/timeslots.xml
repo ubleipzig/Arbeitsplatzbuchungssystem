@@ -6,7 +6,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Medizin/Naturwissenschaften">
@@ -15,7 +15,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Campus-Bibliothek">
@@ -24,7 +24,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Rechtswissenschaft">
@@ -33,7 +33,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Orientwissenschaften">
@@ -42,7 +42,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Kunst">
@@ -51,7 +51,7 @@
             6,7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Musik">
@@ -60,7 +60,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Klassische Archäologie /Ur-und Frühgeschichte">
@@ -69,7 +69,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Veterinärmedizin">
@@ -78,7 +78,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
     <institution name="Bibliothek Erziehungs- und Sportwissenschaft">
@@ -87,7 +87,7 @@
             7,1
         </recurrentClosureDays>
         <specialClosureDays>
-            01.06.2020
+            03.06.2020,04.06.2020,05.06.2020
         </specialClosureDays>
     </institution>
 </institutions>

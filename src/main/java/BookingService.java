@@ -40,11 +40,15 @@ public class BookingService {
     //Hashmap zur relationalen Speicherung von LKN und Libero-Token
     HashMap<String, String> tokenmap = new HashMap<>();
 
+    HashMap<String, Long> tokentimes = new HashMap<>();
+
     //Hashmap zur Speicherung der Zeitslots nach Institution
     HashMap<String, JsonObject> timeslots = new HashMap<>();
 
     //Hashmap zur Speicherung der Nutzerkategorie
     public static HashMap<String, String> categorymap = new HashMap<>();
+
+    boolean secured_area = false;
 
     public BookingService() {
 
@@ -228,6 +232,18 @@ public class BookingService {
 
         if(!area.equals("no selection")) area_query = "and area = '"+area.trim()+"'";
 
+        while(secured_area) {
+            try {
+                System.out.println("Blocked booking thread!");
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //semaphore
+        secured_area = true;
+
         SQLHub hub = new SQLHub(p);
         if(fitting.isEmpty())
             result = hub.getMultiData("select id, area from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
@@ -293,6 +309,8 @@ public class BookingService {
             hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode, institution) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"','"+institution.trim()+"')", "bookingservice");
             hub_intern.executeData("update user set past = past+"+Integer.parseInt(duration)+" where readernumber = '"+readernumber+"'", "bookingservice");
         }
+
+        secured_area = false;
 
         return bookingArray;
     }
@@ -535,6 +553,7 @@ public class BookingService {
                 tokenmap.remove(readernumber);
                 new LiberoManager(p).close(token);
                 categorymap.remove(readernumber);
+                tokentimes.remove(token);
             }
         }
 
@@ -569,6 +588,7 @@ public class BookingService {
 
             //add relation readernumber <-> token to the map
             tokenmap.put(readernumber, token);
+            tokentimes.put(token, System.currentTimeMillis());
 
             //prüfe auf existenz des nutzers in der DB und lege diesen ggf. an
             SQLHub hub = new SQLHub(p);
@@ -626,7 +646,40 @@ public class BookingService {
             e.printStackTrace();
         }
 
-        System.out.println(timeslots);
+        Thread cleanup = new Thread(){
+          public void run() {
+
+              ArrayList<String> candidates = new ArrayList<>();
+
+              for(String t:tokentimes.keySet()) {
+                  long l = tokentimes.get(t);
+                  if(System.currentTimeMillis()-l>=(24*60*60*1000))
+                      candidates.add(t);
+              }
+
+              for(String t:candidates) {
+                  for(String readernumber:tokenmap.keySet()) {
+                      if(tokenmap.get(readernumber).equals(t))
+                      {
+                          tokenmap.remove(readernumber);
+                          categorymap.remove(readernumber);
+                          tokentimes.remove(t);
+                          break;
+                      }
+                  }
+              }
+
+              candidates.clear();
+
+              try {
+                  Thread.sleep(60*60*1000);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+          }
+        };
+
+        cleanup.start();
 
     }
 
