@@ -48,7 +48,13 @@ public class BookingService {
     //Hashmap zur Speicherung der Nutzerkategorie
     public static HashMap<String, String> categorymap = new HashMap<>();
 
-    boolean secured_area = false;
+    ArrayList<HashMap<String, Object>> institutionlist = new ArrayList<>();
+
+    HashMap<String,ArrayList<HashMap<String, Object>>> areamap = new HashMap<>();
+
+    int user_counter = 0;
+
+    public static boolean secured_area = false;
 
     public BookingService() {
 
@@ -95,10 +101,13 @@ public class BookingService {
 
         String retval = "";
 
-        SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct institution from workspace", "bookingservice");
+        if(institutionlist.isEmpty()) {
 
-        for(HashMap institutions:list) {
+            SQLHub hub = new SQLHub(p);
+            institutionlist = hub.getMultiData("select distinct institution from workspace", "bookingservice");
+        }
+
+        for(HashMap institutions:institutionlist) {
             if(institutions.get("institution").equals("Bibliothek Rechtswissenschaft")) continue;
             retval+=institutions.get("institution")+"#";
         }
@@ -114,18 +123,22 @@ public class BookingService {
      * Retourniert die Bereiche, die ein Standort aufweisen kann
      * in einfachen Text-String mit #-Delimiter
      *
-     * todo: Rückgabe kompletter Option-Einträge, oder Auslieferung als JSON?
      *
-      * @param rc
+     * @param rc
      */
     private void areas(RoutingContext rc) {
         String institution = rc.request().getParam("institution");
         String retval = "";
 
-        SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct area from workspace where institution = '"+institution+"'", "bookingservice");
+        if(areamap.get(institution)==null) {
 
-        for(HashMap area:list) {
+            SQLHub hub = new SQLHub(p);
+            ArrayList<HashMap<String, Object>> list = hub.getMultiData("select distinct area from workspace where institution = '" + institution + "'", "bookingservice");
+
+            areamap.put(institution, list);
+        }
+
+        for(HashMap area:areamap.get(institution)) {
 
             retval+=area.get("area")+"#";
         }
@@ -236,9 +249,12 @@ public class BookingService {
             try {
                 System.out.println("Blocked booking thread!");
                 Thread.sleep(100);
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+            if(!secured_area) break;
         }
 
         //semaphore
@@ -292,6 +308,7 @@ public class BookingService {
                 boolean check = checkConcurrentlyBooking(readernumber, start_sql, end_sql, institution);
                 if (check) {
                     bookingArray[3] = "concurrently_booking";
+                    secured_area = false;
                     return bookingArray;
                 }
             }
@@ -312,7 +329,26 @@ public class BookingService {
 
         secured_area = false;
 
+        //autologout
+        if(bookingArray[1]!="")
+        {
+            syslogout(readernumber, token);
+        }
+
         return bookingArray;
+    }
+
+    private void syslogout(String readernumber, String token) {
+        if(tokenmap.containsKey(readernumber)) {
+            if (tokenmap.get(readernumber).equals(token)) {
+                tokenmap.remove(readernumber);
+                new LiberoManager(p).close(token);
+                categorymap.remove(readernumber);
+                tokentimes.remove(readernumber);
+            }
+        }
+
+        user_counter--;
     }
 
     private boolean checkConcurrentlyBooking(String readernumber, Timestamp start, Timestamp end, String institution) {
@@ -416,6 +452,14 @@ public class BookingService {
         String token = rc.request().formAttributes().get("token");
 
         //System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
+
+        if(!tokenmap.get(readernumber).equals(token)) {
+            JsonObject json = new JsonObject();
+            json.put("message", "sessionerror");
+            rc.response().end(json.encodePrettily());
+
+            return;
+        }
 
         String year, month, day, timeslot;
 
@@ -548,14 +592,7 @@ public class BookingService {
         String token = rc.getBodyAsJson().getString("token");
         String readernumber = rc.getBodyAsJson().getString("readernumber");
 
-        if(tokenmap.containsKey(readernumber)) {
-            if (tokenmap.get(readernumber).equals(token)) {
-                tokenmap.remove(readernumber);
-                new LiberoManager(p).close(token);
-                categorymap.remove(readernumber);
-                tokentimes.remove(token);
-            }
-        }
+        syslogout(readernumber, token);
 
         rc.response().end();
 
@@ -568,6 +605,22 @@ public class BookingService {
      *   Content-Type: application/x-www-form-urlencoded
      */
     private void login(RoutingContext rc) {
+
+        if(user_counter>=Integer.parseInt(p.getProperty("cocurrent_user", "25"))) {
+            System.out.println("too many users: "+user_counter);
+
+            JsonObject answer_object = new JsonObject();
+            answer_object.put("token", "null");
+            answer_object.put("msg", "Achtung, zuviele Nutzer sind gerade angemeldet. Bitte versuchen Sie es später noch einmal.");
+
+            rc.response().headers().add("Content-type","application/json");
+
+            rc.response().end(answer_object.encodePrettily());
+            return;
+        }
+
+        user_counter++;
+
         String readernumber = rc.request().formAttributes().get("readernumber");
         String password = rc.request().formAttributes().get("password");
 
@@ -582,13 +635,17 @@ public class BookingService {
         if(token==null||msg.equals("Wrong readernumber or password")) {
             token="null";
             msg = "Lesekartennummer oder Password falsch.";
+            user_counter--;
         }
 
         if(!token.equals("null")) {
 
             //add relation readernumber <-> token to the map
+
+            if(tokenmap.containsKey(readernumber)) user_counter--;
+
             tokenmap.put(readernumber, token);
-            tokentimes.put(token, System.currentTimeMillis());
+            tokentimes.put(readernumber, System.currentTimeMillis());
 
             //prüfe auf existenz des nutzers in der DB und lege diesen ggf. an
             SQLHub hub = new SQLHub(p);
@@ -597,7 +654,10 @@ public class BookingService {
 
         }
 
-        if(msg.equals("Wrong category")) msg = "Leider gibt es für Ihre Nutzerkategorie keine Buchungserlaubnis.";
+        if(msg.equals("Wrong category")) {
+            msg = "Leider gibt es für Ihre Nutzerkategorie keine Buchungserlaubnis.";
+            user_counter--;
+        }
 
         JsonObject answer_object = new JsonObject();
         answer_object.put("token", token);
@@ -649,32 +709,34 @@ public class BookingService {
         Thread cleanup = new Thread(){
           public void run() {
 
-              ArrayList<String> candidates = new ArrayList<>();
+              while(true) {
+                  ArrayList<String> candidates = new ArrayList<>();
 
-              for(String t:tokentimes.keySet()) {
-                  long l = tokentimes.get(t);
-                  if(System.currentTimeMillis()-l>=(24*60*60*1000))
-                      candidates.add(t);
-              }
+                  for (String t : tokentimes.keySet()) {
+                      long l = tokentimes.get(t);
 
-              for(String t:candidates) {
-                  for(String readernumber:tokenmap.keySet()) {
-                      if(tokenmap.get(readernumber).equals(t))
-                      {
-                          tokenmap.remove(readernumber);
-                          categorymap.remove(readernumber);
-                          tokentimes.remove(t);
-                          break;
+                      if (System.currentTimeMillis() - l >= (15 * 60 * 1000))
+                          candidates.add(t);
+                  }
+
+                  for (String t : candidates) {
+                      for (String readernumber : tokenmap.keySet()) {
+                          if (readernumber.equals(t)) {
+                              tokenmap.remove(readernumber);
+                              categorymap.remove(readernumber);
+                              tokentimes.remove(t);
+                              user_counter--;
+                          }
                       }
                   }
-              }
 
-              candidates.clear();
+                  candidates.clear();
 
-              try {
-                  Thread.sleep(60*60*1000);
-              } catch (InterruptedException e) {
-                  e.printStackTrace();
+                  try {
+                      Thread.sleep(60 * 1000);
+                  } catch (InterruptedException e) {
+                      e.printStackTrace();
+                  }
               }
           }
         };

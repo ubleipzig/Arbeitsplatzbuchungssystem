@@ -45,6 +45,7 @@ public class LiberoManager {
             return retval;
         }
         String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();
+        //String user_category = "US";
 
         BookingService.categorymap.put(readernumber, user_category);
 
