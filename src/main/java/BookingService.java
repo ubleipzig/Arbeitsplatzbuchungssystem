@@ -112,6 +112,9 @@ public class BookingService {
         results+="Storno: "+call_stats[5]+"\n";
         results+="Logout: "+call_stats[6]+"\n";
         results+="Login: "+call_stats[7]+"\n";
+        results+="User-Count:"+user_counter+"\n";
+        results+="tokenmap:"+tokenmap+"\n";
+        results+="tokentimes:"+tokentimes+"\n";
 
         rc.response().end(results);
     }

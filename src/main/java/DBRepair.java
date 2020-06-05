@@ -19,7 +19,7 @@ public class DBRepair {
         }
 
         SQLHub hub = new SQLHub(p);
-        ArrayList<HashMap<String, Object>> all_seats = hub.getMultiData("select * from workspace where institution = 'Campus-Bibliothek'","bookingservice");
+        ArrayList<HashMap<String, Object>> all_seats = hub.getMultiData("select * from workspace","bookingservice");
         for(HashMap<String, Object> seat:all_seats) {
             String inst = (String)seat.get("institution");
             SQLHub hub2 = new SQLHub(p);
