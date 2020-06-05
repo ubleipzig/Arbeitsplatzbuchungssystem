@@ -56,6 +56,8 @@ public class BookingService {
 
     public static boolean secured_area = false;
 
+    long call_stats[] = new long[8];
+
     public BookingService() {
 
         init();
@@ -95,9 +97,28 @@ public class BookingService {
         router.post("/booking/storno").handler(this::storno);
         router.route("/booking/checkdate*").handler(BodyHandler.create());
         router.post("/booking/checkdate").handler(this::checkdate);
+        router.route("/booking/counter*").handler(BodyHandler.create());
+        router.get("/booking/counter").handler(this::counter);
+    }
+
+    private void counter(RoutingContext rc) {
+        String results = "";
+
+        results+="Institutions: "+call_stats[0]+"\n";
+        results+="Areas: "+call_stats[1]+"\n";
+        results+="Timeslots: "+call_stats[2]+"\n";
+        results+="Booking: "+call_stats[3]+"\n";
+        results+="Checkdate: "+call_stats[4]+"\n";
+        results+="Storno: "+call_stats[5]+"\n";
+        results+="Logout: "+call_stats[6]+"\n";
+        results+="Login: "+call_stats[7]+"\n";
+
+        rc.response().end(results);
     }
 
     private void institutions(RoutingContext rc) {
+
+        call_stats[0]++;
 
         String retval = "";
 
@@ -127,6 +148,9 @@ public class BookingService {
      * @param rc
      */
     private void areas(RoutingContext rc) {
+
+        call_stats[1]++;
+
         String institution = rc.request().getParam("institution");
         String retval = "";
 
@@ -156,6 +180,9 @@ public class BookingService {
      * @param rc
      */
     private void timeslots(RoutingContext rc) {
+
+        call_stats[2]++;
+
         String institution = rc.request().getParam("institution");
 
         rc.response().headers().add("Content-type","application/json");
@@ -235,6 +262,15 @@ public class BookingService {
         cal.set(Integer.parseInt(year), Integer.parseInt(month)-1, Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minute));
         Timestamp start_sql = new Timestamp(cal.getTimeInMillis());
 
+        Calendar cal_today = Calendar.getInstance();
+        cal_today.add(Calendar.DAY_OF_MONTH,8);
+
+        if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()) {
+            bookingArray[1] = "";
+            bookingArray[3]= "outofreach";
+            return bookingArray;
+        }
+
         //convert duration to milliseconds
         long duration_ms = Integer.parseInt(duration)*60*1000;
         Timestamp end_sql = new Timestamp(cal.getTimeInMillis()+duration_ms);
@@ -286,16 +322,25 @@ public class BookingService {
             workspace_id = (int)workspace.get("id");
             found_area = (String)workspace.get("area");
             SQLHub hub_intern = new SQLHub(p);
-            if(
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and start <= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'","bookingservice").isEmpty()&&
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and start >= '"+start_sql+"' and end between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and end >= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()&&
-                    hub_intern.getSingleData("select * from booking where workspaceId = "+workspace_id+" and institution = '"+institution.trim()+"' and end <= '"+end_sql+"' and start between '"+start_sql+"' and '"+end_sql+"'", "bookingservice").isEmpty()
-            )
-            {
-                //System.out.println("Platz mit der ID "+workspace_id+" gefunden!");
-                found_workplace = true;
+
+            ArrayList<HashMap<String, Object>> possible_conflicts = hub_intern.getMultiData("select start, end from booking where workspaceId ="+workspace_id+" and institution = '"+institution.trim()+"'","bookingservice");
+            boolean trapped = false;
+            for(HashMap<String, Object> pc:possible_conflicts) {
+                long a = ((Timestamp)pc.get("start")).getTime();
+                long b = ((Timestamp)pc.get("end")).getTime();
+
+                long a1 = start_sql.getTime();
+                long b1 = end_sql.getTime();
+
+                if(a1<=a&&b1>=b) trapped = true;
+                if(a1>=a&&b1<=b) trapped = true;
+                if(a1>=a&&a1<=b&&b1>=b) trapped = true;
+                if(a1<=a&&b1>=a&&b1<=b) trapped = true;
+
+                if(trapped) break;
             }
+
+            if(!trapped) found_workplace = true;
 
             if(found_workplace) break;
         }
@@ -435,6 +480,9 @@ public class BookingService {
     }
 
     private void booking(RoutingContext rc) {
+
+        call_stats[3]++;
+
         String institution = rc.request().formAttributes().get("institution");
         String area = rc.request().formAttributes().get("area");
         //String day = rc.request().formAttributes().get("from_day");
@@ -483,6 +531,9 @@ public class BookingService {
     }
 
     private void checkdate(RoutingContext rc) {
+
+        call_stats[4]++;
+
         String date = rc.getBodyAsJson().getString("date");
         String institution = rc.getBodyAsJson().getString("institution");
 
@@ -527,6 +578,9 @@ public class BookingService {
     }
 
     private void storno(RoutingContext rc) {
+
+        call_stats[5]++;
+
         String readernumber = rc.request().formAttributes().get("readernumber");
         String password = rc.request().formAttributes().get("password");
         String bookingcode = rc.request().formAttributes().get("bookingcode");
@@ -589,6 +643,8 @@ public class BookingService {
      */
     private void logout(RoutingContext rc) {
 
+        call_stats[6]++;
+
         String token = rc.getBodyAsJson().getString("token");
         String readernumber = rc.getBodyAsJson().getString("readernumber");
 
@@ -605,6 +661,8 @@ public class BookingService {
      *   Content-Type: application/x-www-form-urlencoded
      */
     private void login(RoutingContext rc) {
+
+        call_stats[7]++;
 
         if(user_counter>=Integer.parseInt(p.getProperty("cocurrent_user", "25"))) {
             System.out.println("too many users: "+user_counter);
