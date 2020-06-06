@@ -39,13 +39,17 @@ public class DBRepair {
 
                     if(!as.equals(a1s)) continue;
 
-                    long a1 = ((Timestamp)entry.get("start")).getTime();
-                    long b1 = ((Timestamp)entry.get("end")).getTime();
+                    long a1 = ((Timestamp)entry2.get("start")).getTime();
+                    long b1 = ((Timestamp)entry2.get("end")).getTime();
 
                     if(a1<=a&&b1>=b) trapped = true;
+
                     if(a1>=a&&b1<=b) trapped = true;
+
                     if(a1>=a&&a1<=b&&b1>=b) trapped = true;
+
                     if(a1<=a&&b1>=a&&b1<=b) trapped = true;
+
 
 
 

@@ -7,7 +7,7 @@ plugins {
 group 'org.ub.dev'
 version '1.0-SNAPSHOT'
 
-mainClassName="DBRepair"
+mainClassName="BookingService"
 
 compileJava.options.encoding = 'UTF-8'
 

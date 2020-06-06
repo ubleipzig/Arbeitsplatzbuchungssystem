@@ -274,6 +274,12 @@ public class BookingService {
             return bookingArray;
         }
 
+        if(!checkdate_internal(year+"-"+month+"-"+day, institution))
+        {
+            bookingArray[1] = "";
+            bookingArray[3]= "outofdate";
+        }
+
         //convert duration to milliseconds
         long duration_ms = Integer.parseInt(duration)*60*1000;
         Timestamp end_sql = new Timestamp(cal.getTimeInMillis()+duration_ms);
@@ -284,13 +290,23 @@ public class BookingService {
 
         if(!area.equals("no selection")) area_query = "and area = '"+area.trim()+"'";
 
+        int x = 0;
+
         while(secured_area) {
             try {
                 System.out.println("Blocked booking thread!");
                 Thread.sleep(100);
 
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+
+            x++;
+            if(x>=50) {
+                bookingArray[3] = "concurrent_error";
+                secured_area = false;
+                return bookingArray;
             }
 
             if(!secured_area) break;
@@ -533,12 +549,7 @@ public class BookingService {
 
     }
 
-    private void checkdate(RoutingContext rc) {
-
-        call_stats[4]++;
-
-        String date = rc.getBodyAsJson().getString("date");
-        String institution = rc.getBodyAsJson().getString("institution");
+    public boolean checkdate_internal(String date, String institution) {
 
         Calendar cal = Calendar.getInstance();
         //year, month, date
@@ -560,23 +571,36 @@ public class BookingService {
                 int s_day = Integer.parseInt(spec.split("[.]")[0]);
 
                 if (s_day == day && s_month == month && s_year == year) {
-                    rc.response().end("false");
-                    return;
+
+                    return false;
                 }
             }
         }
 
         if(closuredays==null) {
-            rc.response().end("true");
-            return;
+
+            return true;
         }
 
         for(String cd:closuredays.split(","))
             if(dow==Integer.parseInt(cd))
-                rc.response().end("false");
+                return false;
 
+        return true;
 
-        rc.response().end("true");
+    }
+
+    private void checkdate(RoutingContext rc) {
+
+        call_stats[4]++;
+
+        String date = rc.getBodyAsJson().getString("date");
+        String institution = rc.getBodyAsJson().getString("institution");
+
+        boolean checkdateboolean = checkdate_internal(date, institution);
+        if(checkdateboolean) rc.response().end("true");
+
+        rc.response().end("false");
 
     }
 
@@ -667,7 +691,7 @@ public class BookingService {
 
         call_stats[7]++;
 
-        if(user_counter>=Integer.parseInt(p.getProperty("cocurrent_user", "25"))) {
+        if(user_counter>=Integer.parseInt(p.getProperty("concurrent_user", "25"))) {
             System.out.println("too many users: "+user_counter);
 
             JsonObject answer_object = new JsonObject();
@@ -777,16 +801,24 @@ public class BookingService {
                       long l = tokentimes.get(t);
 
                       if (System.currentTimeMillis() - l >= (15 * 60 * 1000))
+                      {
                           candidates.add(t);
+                          //System.out.println("candidates: "+t);
+                          user_counter--;
+                          //System.out.println("Gebe Nutzer frei!");
+                      }
                   }
 
                   for (String t : candidates) {
-                      for (String readernumber : tokenmap.keySet()) {
+                      Iterator<String> iter = tokenmap.keySet().iterator();
+                      while(iter.hasNext()) {
+                          String readernumber = iter.next();
                           if (readernumber.equals(t)) {
-                              tokenmap.remove(readernumber);
+                              System.out.println("Entferne BN: "+readernumber);
+                              iter.remove();
                               categorymap.remove(readernumber);
                               tokentimes.remove(t);
-                              user_counter--;
+                              //user_counter--;
                           }
                       }
                   }
