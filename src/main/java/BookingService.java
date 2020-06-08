@@ -42,6 +42,9 @@ public class BookingService {
 
     HashMap<String, Long> tokentimes = new HashMap<>();
 
+    HashMap<String, String> tokenmapma = new HashMap<>();
+    HashMap<String, Long> tokentimesma = new HashMap<>();
+
     //Hashmap zur Speicherung der Zeitslots nach Institution
     HashMap<String, JsonObject> timeslots = new HashMap<>();
 
@@ -99,6 +102,15 @@ public class BookingService {
         router.post("/booking/checkdate").handler(this::checkdate);
         router.route("/booking/counter*").handler(BodyHandler.create());
         router.get("/booking/counter").handler(this::counter);
+
+        router.route("/booking/malogin").handler(BodyHandler.create());
+        router.post("/booking/malogin*").handler(this::malogin);
+        router.route("/booking/malogout").handler(BodyHandler.create());
+        router.post("/booking/malogout*").handler(this::malogout);
+        router.route("/booking/check").handler(BodyHandler.create());
+        router.post("/booking/check*").handler(this::checkReservation);
+        router.route("/booking/plan").handler(BodyHandler.create());
+        router.post("/booking/plan*").handler(this::plan);
     }
 
     private void counter(RoutingContext rc) {
@@ -415,6 +427,81 @@ public class BookingService {
         user_counter--;
     }
 
+    private void checkReservation(RoutingContext rc) {
+        String readernumber = rc.request().formAttributes().get("readernumber");
+
+        SQLHub sqlHub = new SQLHub(p);
+        ArrayList<HashMap<String, Object>> resultlist = sqlHub.getMultiData("select * from booking where readernumber = '"+readernumber+"'","bookingservice");
+
+        JsonObject json_all = new JsonObject();
+        JsonArray json_array = new JsonArray();
+        for(HashMap<String, Object> entry:resultlist) {
+
+            JsonObject json = new JsonObject();
+
+            for(String key:entry.keySet()) {
+                json.put(key, String.valueOf(entry.get(key)));
+            }
+            json_array.add(json);
+
+        }
+
+        json_all.put("result", json_array);
+        rc.response().headers().add("Content-type","application/json");
+        rc.response().end(json_all.encodePrettily());
+    }
+
+    private void plan(RoutingContext rc) {
+        String token = rc.request().formAttributes().get("token");
+        String institution = rc.request().formAttributes().get("institutions");
+        String date = rc.request().formAttributes().get("datepicker");
+
+        Calendar cal = Calendar.getInstance();
+        cal.set(Integer.parseInt(date.split("-")[0]), Integer.parseInt(date.split("-")[1])-1, Integer.parseInt(date.split("-")[2]));
+
+        int y = cal.get(Calendar.YEAR);
+        int m = cal.get(Calendar.MONTH)+1;
+        int d = cal.get(Calendar.DAY_OF_MONTH);
+
+        String today = y+"-"+(m<10 ? "0"+m : m)+"-"+(d<10 ? "0"+d : d)+" 00:00:00";
+
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+
+        y = cal.get(Calendar.YEAR);
+        m = cal.get(Calendar.MONTH)+1;
+        d = cal.get(Calendar.DAY_OF_MONTH);
+
+        String tomorrow = y+"-"+(m<10 ? "0"+m : m)+"-"+(d<10 ? "0"+d : d)+" 00:00:00";
+
+        if(!tokenmapma.containsValue(token)) {
+
+            rc.response().end();
+            return;
+        }
+
+        SQLHub sqlHub = new SQLHub(p);
+        ArrayList<HashMap<String, Object>> resultlist = sqlHub.getMultiData("select * from booking where institution = '"+institution+"' and start >= '"+today+"' and end <= '"+tomorrow+"' order by workspaceId","bookingservice");
+
+        JsonObject json_all = new JsonObject();
+        JsonArray json_array = new JsonArray();
+        for(HashMap<String, Object> entry:resultlist) {
+
+            JsonObject json = new JsonObject();
+
+            for(String key:entry.keySet()) {
+                json.put(key, String.valueOf(entry.get(key)));
+            }
+            json_array.add(json);
+
+        }
+
+        json_all.put("result", json_array);
+
+        rc.response().headers().add("Content-type","application/json");
+
+        rc.response().end(json_all.encodePrettily());
+    }
+
     private boolean checkConcurrentlyBooking(String readernumber, Timestamp start, Timestamp end, String institution) {
 
         boolean trapped = false;
@@ -681,6 +768,18 @@ public class BookingService {
 
     }
 
+    private void malogout(RoutingContext rc) {
+        String token = rc.getBodyAsJson().getString("token");
+        String username = rc.getBodyAsJson().getString("username");
+
+        new LiberoManager(p).close(token);
+
+        tokenmapma.remove(username);
+        tokentimesma.remove(username);
+
+        rc.response().end();
+    }
+
     /**
      *   Login
      *
@@ -752,6 +851,34 @@ public class BookingService {
 
         rc.response().end(answer_object.encodePrettily());
     }
+
+    private void malogin(RoutingContext rc) {
+        String username = rc.request().formAttributes().get("username");
+        String passwd = rc.request().formAttributes().get("passwd");
+
+        String logvalue[] = new LiberoManager(p).malogin(username, passwd);
+        String token = logvalue[0];
+        String msg = logvalue[1];
+
+        if(token==null||msg.equals("Wrong username or password")) {
+            token="null";
+            msg = "Nutzername oder Password falsch.";
+        }
+        if(!token.equals("null")) {
+            tokenmapma.put(username, token);
+            tokentimesma.put(username, System.currentTimeMillis());
+        }
+
+        JsonObject answer_object = new JsonObject();
+        answer_object.put("token", token);
+        answer_object.put("msg", msg);
+
+        rc.response().headers().add("Content-type","application/json");
+
+        rc.response().end(answer_object.encodePrettily());
+
+    }
+
 
     //Initialisierung - Lade Konfiguration aus config.properties
     private void init() {

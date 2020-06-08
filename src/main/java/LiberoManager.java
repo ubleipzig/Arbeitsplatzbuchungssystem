@@ -32,6 +32,20 @@ public class LiberoManager {
         return email;
     }
 
+    public String[] malogin(String username, String password) {
+        Wachtl wachtl = new Wachtl();
+        wachtl.setAuthenticatServiceURL(p.getProperty("authentication_url"));
+
+        String token = wachtl.getAuthSoapClient().login(username, password).getToken();
+        if(token==null||token.equals("null")) {
+            String retval[] = {"null","Wrong username or password"};
+            return retval;
+        }
+
+        String retval[] = {token, ""};
+        return retval;
+    }
+
     public String[] login(String readernumber, String password) {
         Wachtl wachtl = new Wachtl();
         wachtl.setAuthenticatServiceURL(p.getProperty("authentication_url"));
