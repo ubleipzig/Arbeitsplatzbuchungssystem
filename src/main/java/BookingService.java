@@ -336,11 +336,17 @@ public class BookingService {
             for(String f:fitting) {
                 if(f.equals("kein PC"))
                     fitting_query = "and fitting not like '%PC%'";
+                else if(f.equals("mit Strom"))
+                    fitting_query = "and fitting not like '%ohne Strom%'";
                 else
                     fitting_query+= "and fitting like '%"+f+"%'";
             }
 
-            result = hub.getMultiData("select id, area from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query, "bookingservice");
+            String query = "select id, area from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query;
+
+            //System.out.println(query);
+
+            result = hub.getMultiData(query, "bookingservice");
         }
 
         Collections.shuffle(result);
