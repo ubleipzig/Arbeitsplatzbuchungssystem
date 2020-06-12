@@ -111,6 +111,21 @@ public class BookingService {
         router.post("/booking/check*").handler(this::checkReservation);
         router.route("/booking/plan").handler(BodyHandler.create());
         router.post("/booking/plan*").handler(this::plan);
+
+        router.route("/booking/stats*").handler(BodyHandler.create());
+        router.get("/booking/stats").handler(this::stats);
+    }
+
+    private void stats(RoutingContext rc) {
+        String institution = rc.request().getParam("institution");
+        String from = rc.request().getParam("from");
+        String until = rc.request().getParam("until");
+
+        DataCore dc = new DataCore(institution, from, until, p);
+        String data = dc.getData();
+
+        rc.response().headers().add("Content-type", "text/csv");
+        rc.response().end(data);
     }
 
     private void counter(RoutingContext rc) {
@@ -290,6 +305,7 @@ public class BookingService {
         {
             bookingArray[1] = "";
             bookingArray[3]= "outofdate";
+            return bookingArray;
         }
 
         //convert duration to milliseconds
