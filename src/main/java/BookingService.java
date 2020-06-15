@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -111,6 +112,8 @@ public class BookingService {
         router.post("/booking/check*").handler(this::checkReservation);
         router.route("/booking/plan").handler(BodyHandler.create());
         router.post("/booking/plan*").handler(this::plan);
+        router.route("/booking/mastorno*").handler(BodyHandler.create());
+        router.post("/booking/mastorno").handler(this::mastorno);
 
         router.route("/booking/stats*").handler(BodyHandler.create());
         router.get("/booking/stats").handler(this::stats);
@@ -713,6 +716,84 @@ public class BookingService {
 
     }
 
+    private void mastorno(RoutingContext rc) {
+
+        String readernumber = rc.getBodyAsJson().getString("readernumber");
+        String bookingCode = rc.getBodyAsJson().getString("bookingCode");
+        String token = rc.getBodyAsJson().getString("token");
+
+        if(!tokenmapma.containsValue(token)) {
+            rc.response().end();
+            return;
+        }
+
+        String msg = storno_core(token, bookingCode, readernumber);
+
+        rc.response().headers().add("Content-type", "application/json");
+
+        JsonObject json = new JsonObject();
+        json.put("message", msg);
+
+        rc.response().end(json.encodePrettily());
+
+    }
+
+    private String storno_core(String token, String bookingcode, String readernumber) {
+        String msg = new String();
+
+        SQLHub hub = new SQLHub(p);
+        HashMap<String, Object> map = hub.getSingleData("select * from booking where bookingCode='"+bookingcode+"' and readernumber='"+readernumber+"'", "bookingservice");
+        if(map.get("bookingCode")!=null)
+        {
+            Timestamp a = (Timestamp)map.get("start");
+            Timestamp b = (Timestamp)map.get("end");
+
+            String institution = (String)map.get("institution");
+            int workspaceId = (int)map.get("workspaceId");
+
+
+            if(b.getTime()<=System.currentTimeMillis()) {
+                msg = "Zeitlich zurückliegende Buchungen können nicht storniert werden!";
+            }
+            else {
+
+                SQLHub hub2 = new SQLHub(p);
+
+                String email = new LiberoManager(p).getMailAdress(readernumber, token);
+
+                long c = System.currentTimeMillis();
+                if(c>=a.getTime()&&c<=b.getTime())
+                {
+                    long duration = (c - a.getTime())/(1000*60); //in minutes
+
+                    hub2.executeData("update booking set start = '"+a.toString()+"', end = '"+Timestamp.from(Instant.ofEpochMilli(c)).toString()+"' where bookingCode='" + bookingcode + "' and readernumber='" + readernumber + "'", "bookingservice");
+                    hub2.executeData("update user set past = past-" + duration + " where readernumber = '" + readernumber + "'", "bookingservice");
+
+                    msg = "Die Restlaufzeit Ihrer Buchung wurde gelöscht.";
+
+                    sendStornoMail(email, readernumber, institution, workspaceId, Timestamp.from(Instant.ofEpochMilli(c)), b);
+
+                }else {
+
+                    long duration = (b.getTime() - a.getTime())/(1000*60); //in minutes
+                    hub2.executeData("delete from booking where bookingCode='" + bookingcode + "' and readernumber='" + readernumber + "'", "bookingservice");
+                    hub2.executeData("update user set past = past-" + duration + " where readernumber = '" + readernumber + "'", "bookingservice");
+
+                    msg = "Ihre Buchung wurde gelöscht.";
+                    sendStornoMail(email, readernumber, institution, workspaceId, a, b);
+                }
+
+            }
+
+        }
+        else {
+            msg = "Der angegebene Buchungscode wurde nicht gefunden!";
+        }
+
+        return msg;
+
+    }
+
     private void storno(RoutingContext rc) {
 
         call_stats[5]++;
@@ -733,32 +814,8 @@ public class BookingService {
         }
 
         if(!token.equals("null")) {
-            SQLHub hub = new SQLHub(p);
-            HashMap<String, Object> map = hub.getSingleData("select * from booking where bookingCode='"+bookingcode+"' and readernumber='"+readernumber+"'", "bookingservice");
-            if(map.get("bookingCode")!=null)
-            {
-                Timestamp a = (Timestamp)map.get("start");
-                Timestamp b = (Timestamp)map.get("end");
 
-                String institution = (String)map.get("institution");
-                int workspaceId = (int)map.get("workspaceId");
-
-
-                long duration = (b.getTime() - a.getTime())/(1000*60); //in minutes
-
-                SQLHub hub2 = new SQLHub(p);
-                hub2.executeData("delete from booking where bookingCode='"+bookingcode+"' and readernumber='"+readernumber+"'","bookingservice");
-                hub2.executeData("update user set past = past-"+duration+" where readernumber = '"+readernumber+"'", "bookingservice");
-
-                msg = "Ihre Buchung wurde gelöscht.";
-
-                String email = new LiberoManager(p).getMailAdress(readernumber, token);
-                sendStornoMail(email, readernumber, institution, workspaceId, a, b);
-
-            }
-            else {
-                msg = "Der angegebene Buchungscode wurde nicht gefunden!";
-            }
+            msg = storno_core(token, bookingcode, readernumber);
 
         }
 
