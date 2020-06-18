@@ -1,4 +1,4 @@
-Vielen Dank für Ihre Buchung!
+Arbeitsplatzbuchung an der UBL
 
 Buchung für ###readernumber###
 
@@ -8,8 +8,16 @@ Bereich: ###area### Platz ###id###
 Datum: ###date###
 Zeit: ###timeslot###
 
+Die Buchungsbestätigung ist auf Verlangen vorzuzeigen. Bitte beachten Sie die geltenden Hygienevorschriften.
+
+Achtung:
+
+Buchen Sie nur Zeitspannen, die Sie auch wahrnehmen können und stornieren Sie gegebenenfalls den Platz unter Angabe
+des Buchungscodes.
+Wir behalten uns vor, nicht belegte Plätze freizugeben.
+
 Buchungscode: ###code###
 
-Bitte zeigen Sie diese Bestätigungen beim Betreten der Bibliothek vor und beachten Sie die geltenden Hygienevorschiften.
+Hier geht es zum Storno: https://seats.ub.uni-leipzig.de
 
 

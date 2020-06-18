@@ -1,93 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <institutions>
     <institution name="Bibliotheca Albertina">
-        <interval from="08:00" until="19:00"/>
-        <recurrentClosureDays>
-            7,1
-        </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
+        <interval from="08:00" until="24:00"/>
+        <interval from="08:00" until="24:00" day="7"/>
+        <interval from="10:00" until="20:00" day="1"/>
     </institution>
     <institution name="Bibliothek Medizin/Naturwissenschaften">
-        <interval from="08:00" until="19:00"/>
+        <interval from="08:00" until="24:00"/>
+        <interval from="08:00" until="24:00" day="7"/>
         <recurrentClosureDays>
-            7,1
+            1
         </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
     </institution>
     <institution name="Campus-Bibliothek">
-        <interval from="08:00" until="19:00"/>
-        <recurrentClosureDays>
-            7,1
-        </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
-    </institution>
-    <institution name="Bibliothek Rechtswissenschaft">
-        <interval from="10:00" until="16:00"/>
-        <recurrentClosureDays>
-            7,1
-        </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
+        <interval from="08:00" until="24:00"/>
     </institution>
     <institution name="Bibliothek Orientwissenschaften">
         <interval from="09:00" until="18:00"/>
         <recurrentClosureDays>
             7,1
         </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
     </institution>
     <institution name="Bibliothek Kunst">
         <interval from="10:00" until="16:00"/>
         <recurrentClosureDays>
             6,7,1
         </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
     </institution>
     <institution name="Bibliothek Musik">
         <interval from="10:00" until="16:00"/>
         <recurrentClosureDays>
             7,1
         </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
     </institution>
     <institution name="Bibliothek Klassische Archäologie /Ur-und Frühgeschichte">
         <interval from="10:00" until="16:00"/>
         <recurrentClosureDays>
             7,1
         </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
     </institution>
     <institution name="Bibliothek Veterinärmedizin">
-        <interval from="10:00" until="16:00"/>
-        <recurrentClosureDays>
-            7,1
-        </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
-    </institution>
-    <institution name="Bibliothek Erziehungs- und Sportwissenschaft">
         <interval from="09:00" until="18:00"/>
         <recurrentClosureDays>
             7,1
         </recurrentClosureDays>
-        <specialClosureDays>
-            03.06.2020,04.06.2020,05.06.2020
-        </specialClosureDays>
+    </institution>
+    <institution name="Bibliothek Erziehungs- und Sportwissenschaft">
+        <interval from="08:00" until="22:00"/>
+        <interval from="10:00" until="18:00" day="6"/>
+        <recurrentClosureDays>
+            1
+        </recurrentClosureDays>
     </institution>
 </institutions>

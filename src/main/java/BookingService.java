@@ -1,9 +1,6 @@
-import au.com.libero.libraryapi.types.Routing;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -18,9 +15,7 @@ import org.jdom2.input.SAXBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -296,7 +291,7 @@ public class BookingService {
         Timestamp start_sql = new Timestamp(cal.getTimeInMillis());
 
         Calendar cal_today = Calendar.getInstance();
-        cal_today.add(Calendar.DAY_OF_MONTH,8);
+        cal_today.add(Calendar.DAY_OF_MONTH,7);
 
         if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()) {
             bookingArray[1] = "";
@@ -314,6 +309,12 @@ public class BookingService {
         //convert duration to milliseconds
         long duration_ms = Integer.parseInt(duration)*60*1000;
         Timestamp end_sql = new Timestamp(cal.getTimeInMillis()+duration_ms);
+
+        if(!checktime_internal(start_sql, end_sql, institution)) {
+            bookingArray[1] = "";
+            bookingArray[3] = "outoftime";
+            return bookingArray;
+        }
 
         ArrayList<HashMap<String, Object>> result = new ArrayList<>();
 
@@ -702,6 +703,66 @@ public class BookingService {
 
     }
 
+    private boolean checktime_internal(Timestamp start, Timestamp end, String institution) {
+        //start same day like end
+
+        //attention: getDayOfWeek starts with 1 = Monday!!!
+        int dow = start.toLocalDateTime().getDayOfWeek().getValue();
+        //we "convert" the value
+
+        if(dow!=7) dow+=1;
+        else dow-=6;
+
+        Calendar a = Calendar.getInstance();
+        a.set(Calendar.HOUR_OF_DAY, start.toLocalDateTime().getHour());
+        a.set(Calendar.MINUTE, start.toLocalDateTime().getMinute());
+
+        Calendar b = Calendar.getInstance();
+        b.set(Calendar.HOUR_OF_DAY, end.toLocalDateTime().getHour());
+        b.set(Calendar.MINUTE, end.toLocalDateTime().getMinute());
+
+        boolean has_own_openings = false;
+
+        for(int i=0;i<timeslots.get(institution).getJsonArray("interval").getList().size();i++) {
+            if (timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("day")==null) continue;
+            if (timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("day").trim().equals(""+dow)) {
+                //es existiert eine spezifizierte öffnungszeit
+
+                Calendar a1 = Calendar.getInstance();
+                a1.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("from").split(":")[0]));
+                a1.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("from").split(":")[1]));
+
+                Calendar a2 = Calendar.getInstance();
+                a2.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[0]));
+                a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[1]));
+
+                has_own_openings = true;
+
+                if (a.before(a1)) return false;
+                if (b.after(a2)) return false;
+            }
+        }
+
+        if(!has_own_openings)
+        {
+            Calendar a1 = Calendar.getInstance();
+            a1.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]));
+            a1.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[1]));
+
+            Calendar a2 = Calendar.getInstance();
+            a2.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]));
+            a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[1]));
+
+            has_own_openings = true;
+
+            if(a.before(a1)) return false;
+            if(b.after(a2)) return false;
+
+        }
+
+        return true;
+    }
+
     private void checkdate(RoutingContext rc) {
 
         call_stats[4]++;
@@ -869,8 +930,8 @@ public class BookingService {
 
         call_stats[7]++;
 
-        if(user_counter>=Integer.parseInt(p.getProperty("concurrent_user", "25"))) {
-            System.out.println("too many users: "+user_counter);
+        if(tokenmap.keySet().size()>=Integer.parseInt(p.getProperty("concurrent_user", "25"))) {
+            System.out.println("too many users: "+tokenmap.keySet().size());
 
             JsonObject answer_object = new JsonObject();
             answer_object.put("token", "null");
@@ -972,12 +1033,26 @@ public class BookingService {
             Document doc = new SAXBuilder().build("config/timeslots.xml");
             String option_element = new String();
             for(Element e_inst:doc.getRootElement().getChildren("institution")) {
-                Element e_interval = e_inst.getChild("interval");
+
 
                 JsonObject jso = new JsonObject();
 
-                jso.put("from", e_interval.getAttributeValue("from"));
-                jso.put("until", e_interval.getAttributeValue("until"));
+                JsonArray json_array = new JsonArray();
+
+                for(Element e_interval : e_inst.getChildren("interval")) {
+
+                    JsonObject jso_interval = new JsonObject();
+
+
+                    jso_interval.put("from", e_interval.getAttributeValue("from"));
+                    jso_interval.put("until", e_interval.getAttributeValue("until"));
+                    jso_interval.put("day", e_interval.getAttributeValue("day"));
+
+                    json_array.add(jso_interval);
+
+                }
+
+                jso.put("interval", json_array);
 
                 String e_recclosuredays = e_inst.getChildText("recurrentClosureDays");
                 String e_specclosuredays = e_inst.getChildText("specialClosureDays");
@@ -991,6 +1066,7 @@ public class BookingService {
                 timeslots.put(e_inst.getAttributeValue("name"), jso);
 
             }
+
         } catch (JDOMException e) {
             e.printStackTrace();
         } catch (IOException e) {
