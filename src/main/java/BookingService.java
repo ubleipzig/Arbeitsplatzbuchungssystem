@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.spi.CalendarNameProvider;
 
 /**
  * BookingService -  Hauptklasse für das Arbeitsplatzbuchungssystem
@@ -731,10 +732,15 @@ public class BookingService {
                 Calendar a1 = Calendar.getInstance();
                 a1.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("from").split(":")[0]));
                 a1.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("from").split(":")[1]));
+                a1.set(Calendar.SECOND, 0);
+                a1.set(Calendar.MILLISECOND, 0);
 
                 Calendar a2 = Calendar.getInstance();
                 a2.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[0]));
                 a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[1]));
+                a2.set(Calendar.SECOND, 0);
+                a2.set(Calendar.MILLISECOND, 0);
+
 
                 has_own_openings = true;
 
@@ -748,10 +754,14 @@ public class BookingService {
             Calendar a1 = Calendar.getInstance();
             a1.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]));
             a1.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[1]));
+            a1.set(Calendar.SECOND, 0);
+            a1.set(Calendar.MILLISECOND, 0);
 
             Calendar a2 = Calendar.getInstance();
             a2.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]));
             a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[1]));
+            a2.set(Calendar.SECOND, 0);
+            a2.set(Calendar.MILLISECOND, 0);
 
             has_own_openings = true;
 
