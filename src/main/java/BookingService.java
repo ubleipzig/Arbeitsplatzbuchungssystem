@@ -292,6 +292,8 @@ public class BookingService {
         Timestamp start_sql = new Timestamp(cal.getTimeInMillis());
 
         Calendar cal_today = Calendar.getInstance();
+        cal_today.set(Calendar.HOUR_OF_DAY, 23);
+        cal_today.set(Calendar.MINUTE, 59);
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
         if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()) {
