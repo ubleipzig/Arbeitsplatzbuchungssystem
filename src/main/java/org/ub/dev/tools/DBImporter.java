@@ -1,3 +1,7 @@
+package org.ub.dev.tools;
+
+import org.ub.dev.sql.SQLHub;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;

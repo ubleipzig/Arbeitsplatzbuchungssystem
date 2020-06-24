@@ -1,3 +1,5 @@
+package org.ub.dev.service;
+
 import java.util.Properties;
 
 import javax.activation.DataHandler;

@@ -1,3 +1,7 @@
+package org.ub.dev.tools;
+
+import org.ub.dev.service.DataCore;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;

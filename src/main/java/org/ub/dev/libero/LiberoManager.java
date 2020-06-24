@@ -1,15 +1,14 @@
+package org.ub.dev.libero;
 
-
-import au.com.libero.libraryapi.types.*;
 import de.unileipzig.ub.libero6wsclient.Wachtl;
+import org.ub.dev.service.BookingService;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
  * Workspace - Bookingsystem
  *
- * LiberoManager
+ * org.ub.dev.libero.LiberoManager
  */
 
 public class LiberoManager {
@@ -46,6 +45,18 @@ public class LiberoManager {
         return retval;
     }
 
+    private String fakeToken() {
+        String array = new String("abcdefghijklmnopqrstuvwxyz");
+        String token = "";
+        for(int i=0;i<10;i++)
+        {
+            token += array.charAt(new Random().nextInt(26));
+            System.out.println(token);
+        }
+
+        return token;
+    }
+
     public String[] login(String readernumber, String password) {
         Wachtl wachtl = new Wachtl();
         wachtl.setAuthenticatServiceURL(p.getProperty("authentication_url"));
@@ -54,12 +65,12 @@ public class LiberoManager {
         String msg = "";
 
         String token = wachtl.getAuthSoapClient().patronLogin(readernumber, password).getToken();
+
         if(token==null||token.equals("null")) {
             String retval[] = {"null","Wrong readernumber or password"};
             return retval;
         }
         String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();
-        //String user_category = "US";
 
         BookingService.categorymap.put(readernumber, user_category);
 

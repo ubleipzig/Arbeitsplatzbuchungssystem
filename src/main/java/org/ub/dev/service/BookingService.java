@@ -1,3 +1,5 @@
+package org.ub.dev.service;
+
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -11,6 +13,8 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.ub.dev.libero.LiberoManager;
+import org.ub.dev.sql.SQLHub;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,10 +25,9 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.spi.CalendarNameProvider;
 
 /**
- * BookingService -  Hauptklasse für das Arbeitsplatzbuchungssystem
+ * org.ub.dev.service.BookingService -  Hauptklasse für das Arbeitsplatzbuchungssystem
  *
  * Die Klasse stellt im wesentlichen REST-API-Endpunkte zur Verfügung, über die das Frontend kommuniziert.
  */

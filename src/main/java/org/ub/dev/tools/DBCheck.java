@@ -1,3 +1,7 @@
+package org.ub.dev.tools;
+
+import org.ub.dev.sql.SQLHub;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -5,8 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
-public class DBRepair {
-    public DBRepair() {
+public class DBCheck {
+    public DBCheck() {
         init();
     }
 
@@ -42,13 +46,13 @@ public class DBRepair {
                     long a1 = ((Timestamp)entry2.get("start")).getTime();
                     long b1 = ((Timestamp)entry2.get("end")).getTime();
 
-                    if(a1<=a&&b1>=b) trapped = true;
+                    if(a1<a&&b1>b) trapped = true;
 
-                    if(a1>=a&&b1<=b) trapped = true;
+                    if(a1>a&&b1<b) trapped = true;
 
-                    if(a1>=a&&a1<=b&&b1>=b) trapped = true;
+                    if(a1>a&&a1<b&&b1>b) trapped = true;
 
-                    if(a1<=a&&b1>=a&&b1<=b) trapped = true;
+                    if(a1<a&&b1>a&&b1<b) trapped = true;
 
 
 
@@ -64,6 +68,6 @@ public class DBRepair {
     }
 
     public static void main(String args[]) {
-        new DBRepair();
+        new DBCheck();
     }
 }

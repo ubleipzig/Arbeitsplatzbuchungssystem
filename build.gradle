@@ -7,7 +7,7 @@ plugins {
 group 'org.ub.dev'
 version '1.0-SNAPSHOT'
 
-mainClassName="BookingService"
+mainClassName="org.ub.dev.service.BookingService"
 
 compileJava.options.encoding = 'UTF-8'
 
@@ -69,5 +69,5 @@ dependencies {
     compile 'javax.mail:mail:1.4.7'
 
     compile 'com.sun.org.apache.xml.internal:resolver:20050927'
-    compile files('CacheDB.jar')
+
 }
