@@ -297,9 +297,10 @@ public class BookingService {
         Calendar cal_today = Calendar.getInstance();
         cal_today.set(Calendar.HOUR_OF_DAY, 23);
         cal_today.set(Calendar.MINUTE, 59);
+        cal_today.set(Calendar.SECOND, 59);
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
-        if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()) {
+        if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()||cal.getTimeInMillis()<System.currentTimeMillis()) {
             bookingArray[1] = "";
             bookingArray[3]= "outofreach";
             return bookingArray;
