@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * org.ub.dev.service.BookingService -  Hauptklasse für das Arbeitsplatzbuchungssystem
  *
- * Die Klasse stellt im wesentlichen REST-API-Endpunkte zur Verfügung, über die das Frontend kommuniziert.
+ * Die Klasse stellt sowohl REST-API-Endpunkte zur Verfügung, über die das Frontend kommuniziert, als auch die gesamten Logikkomponenten.
  */
 
 
@@ -40,9 +40,13 @@ public class BookingService {
     //Hashmap zur relationalen Speicherung von LKN und Libero-Token
     HashMap<String, String> tokenmap = new HashMap<>();
 
+    //Hashmap zur Speicherung von LKN und Anmeldezeitpunkt
     HashMap<String, Long> tokentimes = new HashMap<>();
 
+    //Hashmap zur Speicherung von Nutzername (Mitarbeiter) und Libero-Token
     HashMap<String, String> tokenmapma = new HashMap<>();
+
+    //Hashmap zur Speichberung von Nutzername (Mitarbeiter) und Anmeldezeitpunkt
     HashMap<String, Long> tokentimesma = new HashMap<>();
 
     //Hashmap zur Speicherung der Zeitslots nach Institution
