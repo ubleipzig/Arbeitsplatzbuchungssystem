@@ -55,10 +55,13 @@ public class BookingService {
     //Hashmap zur Speicherung der Nutzerkategorie
     public static HashMap<String, String> categorymap = new HashMap<>();
 
+    //Cache-Speicher für die Institutionsliste
     ArrayList<HashMap<String, Object>> institutionlist = new ArrayList<>();
 
+    //Cache-Speicher für die Bereichsliste
     HashMap<String,ArrayList<HashMap<String, Object>>> areamap = new HashMap<>();
 
+    //Zähler für die angemeldeten Nutzer
     int user_counter = 0;
 
     public static boolean secured_area = false;
@@ -122,6 +125,12 @@ public class BookingService {
         router.get("/booking/stats").handler(this::stats);
     }
 
+    /**
+     * API-Endpunkt für Statisktiken unter Angabe der Institution, dem Startzeitpunkt und Endzeitpunkt
+     *
+     * @param rc
+     */
+
     private void stats(RoutingContext rc) {
         String institution = rc.request().getParam("institution");
         String from = rc.request().getParam("from");
@@ -133,6 +142,12 @@ public class BookingService {
         rc.response().headers().add("Content-type", "text/csv");
         rc.response().end(data);
     }
+
+    /**
+     * API-Endpunkt für die Darstellung der aktuellen Aufrufzahlen für die einzelnen API-Endpunkte
+     *
+     * @param rc
+     */
 
     private void counter(RoutingContext rc) {
         String results = "";
@@ -151,6 +166,13 @@ public class BookingService {
 
         rc.response().end(results);
     }
+
+    /**
+     * Endpunkt für Ausgabe der verschiedenen Institutionen
+     * Content-Type: html/text
+     *
+     * @param rc
+     */
 
     private void institutions(RoutingContext rc) {
 
@@ -171,7 +193,7 @@ public class BookingService {
         if(retval.contains("#"))
             retval = retval.substring(0, retval.length()-1);
 
-        rc.response().headers().add("Content-type","html/text");
+        rc.response().headers().add("Content-type","text/html");
 
         rc.response().end(retval);
     }
@@ -179,6 +201,7 @@ public class BookingService {
     /**
      * Retourniert die Bereiche, die ein Standort aufweisen kann
      * in einfachen Text-String mit #-Delimiter
+     * Content-Type: text/html
      *
      *
      * @param rc
@@ -205,7 +228,7 @@ public class BookingService {
         if(retval.contains("#"))
             retval = retval.substring(0, retval.length()-1);
 
-        rc.response().headers().add("Content-type","html/text");
+        rc.response().headers().add("Content-type","text/html");
 
         rc.response().end(retval);
     }
@@ -213,6 +236,8 @@ public class BookingService {
 
     /**
      * Retournierung der Zeitslots nach Standort
+     * Content-type: application/json
+     *
      * @param rc
      */
     private void timeslots(RoutingContext rc) {
@@ -451,6 +476,13 @@ public class BookingService {
         return bookingArray;
     }
 
+    /**
+     * Logout eines Nutzers via Angabe der Parameter readernumber und des Libero-Tokens
+     *
+     * @param readernumber
+     * @param token
+     */
+
     private void syslogout(String readernumber, String token) {
         if(tokenmap.containsKey(readernumber)) {
             if (tokenmap.get(readernumber).equals(token)) {
@@ -463,6 +495,13 @@ public class BookingService {
 
         user_counter--;
     }
+
+    /**
+     * API-Endpunkt für die Abfrage aller Buchungen eines Nutzers via Parameter readernumber
+     * Content-Type: application/json
+     *
+     * @param rc
+     */
 
     private void checkReservation(RoutingContext rc) {
         String readernumber = rc.request().formAttributes().get("readernumber");
@@ -487,6 +526,13 @@ public class BookingService {
         rc.response().headers().add("Content-type","application/json");
         rc.response().end(json_all.encodePrettily());
     }
+
+    /**
+     * API-Endpunkt für den Tagesbuchungsplan. Hier können Mitarbeiter über die Angabe der Institution die Belegung
+     * für einen bestimmten Tag einsehen.
+     *
+     * @param rc
+     */
 
     private void plan(RoutingContext rc) {
         String token = rc.request().formAttributes().get("token");
@@ -539,6 +585,16 @@ public class BookingService {
         rc.response().end(json_all.encodePrettily());
     }
 
+    /**
+     * Prüfung auf eine nebenläufige Buchung in der gleichen Institution des selben Nutzers.
+     *
+     * @param readernumber
+     * @param start
+     * @param end
+     * @param institution
+     * @return
+     */
+
     private boolean checkConcurrentlyBooking(String readernumber, Timestamp start, Timestamp end, String institution) {
 
         boolean trapped = false;
@@ -563,6 +619,17 @@ public class BookingService {
 
         return false;
     }
+
+    /**
+     * Versand der Stornomail
+     *
+     * @param address
+     * @param readernumber
+     * @param institution
+     * @param workspaceId
+     * @param start
+     * @param end
+     */
 
     private void sendStornoMail(String address, String readernumber, String institution, int workspaceId, Timestamp start, Timestamp end) {
         try {
@@ -594,6 +661,22 @@ public class BookingService {
 
     }
 
+    /**
+     * Versand der Buchungsbestätigungs-Mail
+     *
+     * @param address
+     * @param readernumber
+     * @param institution
+     * @param area
+     * @param workspaceId
+     * @param day
+     * @param month
+     * @param year
+     * @param start
+     * @param end
+     * @param bookingCode
+     */
+
     private void sendMail(String address, String readernumber, String institution, String area, int workspaceId, String day, String month, String year, Timestamp start, Timestamp end, String bookingCode) {
         try {
 
@@ -622,27 +705,24 @@ public class BookingService {
 
     }
 
+    /**
+     * API-Endpunkt für die Buchung.
+     *
+     * @param rc
+     */
+
     private void booking(RoutingContext rc) {
 
         call_stats[3]++;
 
         String institution = rc.request().formAttributes().get("institution");
         String area = rc.request().formAttributes().get("area");
-        //String day = rc.request().formAttributes().get("from_day");
-        //String month = rc.request().formAttributes().get("from_month");
-        //String year = rc.request().formAttributes().get("from_year");
-        //String hour = rc.request().formAttributes().get("from_hour");
-        //String minute = rc.request().formAttributes().get("from_minute");
-        //String duration = rc.request().formAttributes().get("duration");
-        //String timeslot = rc.request().formAttributes().get("timeslot");
         String from_date = rc.request().formAttributes().get("from_date");
         String from_time = rc.request().formAttributes().get("from_time");
         String until_time = rc.request().formAttributes().get("until_time");
         List<String> fitting = rc.request().formAttributes().getAll("fitting");
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
-
-        //System.out.println(institution+":"+area+":"+day+":"+month+":"+year+":"+hour+":"+minute+":"+duration+":"+readernumber+":"+token);
 
         if(!tokenmap.get(readernumber).equals(token)) {
             JsonObject json = new JsonObject();
@@ -660,7 +740,6 @@ public class BookingService {
 
         timeslot = from_time.replaceAll(":","")+"-"+until_time.replaceAll(":","");
 
-        //String bookingArray[] = do_booking(institution, area, day, month, year, hour, minute, duration, readernumber, token, fitting);
         String bookingArray[] = do_booking(institution, area, day, month, year, timeslot, readernumber, token, fitting);
 
         JsonObject json = new JsonObject();
@@ -672,6 +751,16 @@ public class BookingService {
         rc.response().end(json.encodePrettily());
 
     }
+
+    /**
+     * Prüft, ob das Buchungsdatum an einem Schließtag stattfindet. Die Schließtage können periodisch wiederkehrend sein "recurrent closure days",
+     * wie beispielsweise Wochenenden oder ob es spezielle Schließtage sind "special closure days". Sie werden in der Datei
+     * timeslots.xml konfiguriert.
+     *
+     * @param date
+     * @param institution
+     * @return
+     */
 
     public boolean checkdate_internal(String date, String institution) {
 
@@ -714,6 +803,15 @@ public class BookingService {
 
     }
 
+    /**
+     * Prüft, ob eine Buchungszeit innerhalb der Öffnungszeiten ist.
+     *
+     * @param start
+     * @param end
+     * @param institution
+     * @return
+     */
+
     private boolean checktime_internal(Timestamp start, Timestamp end, String institution) {
         //start same day like end
 
@@ -739,15 +837,19 @@ public class BookingService {
             if (timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("day").trim().equals(""+dow)) {
                 //es existiert eine spezifizierte öffnungszeit
 
+
+                //Opening
                 Calendar a1 = Calendar.getInstance();
                 a1.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("from").split(":")[0]));
                 a1.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("from").split(":")[1]));
                 a1.set(Calendar.SECOND, 0);
                 a1.set(Calendar.MILLISECOND, 0);
 
+
+                //Closing
                 Calendar a2 = Calendar.getInstance();
                 a2.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[0]));
-                a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[1]));
+                a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(i).getString("until").split(":")[1])+1);
                 a2.set(Calendar.SECOND, 0);
                 a2.set(Calendar.MILLISECOND, 0);
 
@@ -769,7 +871,7 @@ public class BookingService {
 
             Calendar a2 = Calendar.getInstance();
             a2.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]));
-            a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[1]));
+            a2.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[1])+1);
             a2.set(Calendar.SECOND, 0);
             a2.set(Calendar.MILLISECOND, 0);
 
@@ -782,6 +884,12 @@ public class BookingService {
 
         return true;
     }
+
+    /**
+     * API-Endpunkt für die ajax-basierten Requests aus dem Buchungsformular, um zu Prüfen, ob das gewählte Datum überhaupt gebucht werden kann.
+     *
+     * @param rc
+     */
 
     private void checkdate(RoutingContext rc) {
 
@@ -797,6 +905,11 @@ public class BookingService {
 
     }
 
+    /**
+     * API-Endpunkt für die Stornierung durch Mitarbeiter.
+     *
+     * @param rc
+     */
     private void mastorno(RoutingContext rc) {
 
         String readernumber = rc.getBodyAsJson().getString("readernumber");
@@ -818,6 +931,16 @@ public class BookingService {
         rc.response().end(json.encodePrettily());
 
     }
+
+    /**
+     * Storno-Funktion. Storniert eine Buchung unter Angabe des Buchungscodes, der Bibliotheksnummer(Lesekartennummer),
+     * und dem Libero-Token (desjenigen, der die Stornierung auslöst).
+     *
+     * @param token
+     * @param bookingcode
+     * @param readernumber
+     * @return
+     */
 
     private String storno_core(String token, String bookingcode, String readernumber) {
         String msg = new String();
@@ -875,6 +998,12 @@ public class BookingService {
 
     }
 
+    /**
+     * API-Endpunkt für die Stornierung von Buchungen durch Nutzer.
+     *
+     * @param rc
+     */
+
     private void storno(RoutingContext rc) {
 
         call_stats[5]++;
@@ -910,8 +1039,7 @@ public class BookingService {
     }
 
     /**
-     * Logout. Löscht die Relation token<->readernumber und beendet die offene Libero-Session.
-     * Content-Type: application/json
+     * API-Endpunkt für das Logout.
      *
      * @param rc
      */
@@ -928,6 +1056,11 @@ public class BookingService {
 
     }
 
+    /**
+     * API-Endpunkt für das Logout (Mitarbeiter).
+     *
+     * @param rc
+     */
     private void malogout(RoutingContext rc) {
         String token = rc.getBodyAsJson().getString("token");
         String username = rc.getBodyAsJson().getString("username");
@@ -941,7 +1074,7 @@ public class BookingService {
     }
 
     /**
-     *   Login
+     *   API-Endpunkt für das Login.
      *
      *   Erwartet werden die Variablen readernumber und password
      *   Content-Type: application/x-www-form-urlencoded
@@ -1012,6 +1145,12 @@ public class BookingService {
         rc.response().end(answer_object.encodePrettily());
     }
 
+    /**
+     * API-Endpunkt für das Login für Mitarbeiter.
+     *
+     * @param rc
+     */
+
     private void malogin(RoutingContext rc) {
         String username = rc.request().formAttributes().get("username");
         String passwd = rc.request().formAttributes().get("passwd");
@@ -1040,7 +1179,9 @@ public class BookingService {
     }
 
 
-    //Initialisierung - Lade Konfiguration aus config.properties
+    /**
+     * Inititalisierung.
+     */
     private void init() {
 
         try {
@@ -1093,6 +1234,7 @@ public class BookingService {
             e.printStackTrace();
         }
 
+        //Cleanup-Thread: Räumt alle verwaisten Nutzer nach 15 Minuten auf und gibt somit den Platz frei.
         Thread cleanup = new Thread(){
           public void run() {
 
@@ -1105,9 +1247,7 @@ public class BookingService {
                       if (System.currentTimeMillis() - l >= (15 * 60 * 1000))
                       {
                           candidates.add(t);
-                          //System.out.println("candidates: "+t);
                           user_counter--;
-                          //System.out.println("Gebe Nutzer frei!");
                       }
                   }
 
@@ -1120,7 +1260,6 @@ public class BookingService {
                               iter.remove();
                               categorymap.remove(readernumber);
                               tokentimes.remove(t);
-                              //user_counter--;
                           }
                       }
                   }
