@@ -7,6 +7,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
+/**
+ * DBImporter - Arbeitsplatzbuchungssystem
+ *
+ * Stellt Funktionalität bereit um aus einer CSV-Datei die Daten in die DB zu überführen
+ *
+ */
 public class DBImporter {
 
     public DBImporter() {

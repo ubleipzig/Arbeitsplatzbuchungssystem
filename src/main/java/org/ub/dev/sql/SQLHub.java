@@ -8,6 +8,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
+/**
+ * SQLHub - Arbeitsplatzbuchungssystem
+ *
+ * Management-Klasse für SQL-Zugriffe
+ *
+ */
 public class SQLHub {
 
     Properties p;

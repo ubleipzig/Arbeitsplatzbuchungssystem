@@ -18,12 +18,28 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * QuickMail - Arbeitsplatzbuchungssystem
+ *
+ * Erstellt Emails für Buchungsbestätigungen und Stornierungen aus den Templates "mail.template" und "storno.template" aus dem config-Verzeichnis
+ *
+ */
 public class QuickMail {
 
     private static Logger logger = LogManager.getLogger(QuickMail.class);
 
     public QuickMail() {}
 
+    /**
+     * Sended Mail mit dem Betreff subject und dem Inhalt body an die Adresse recipient
+     *
+     * @param sender
+     * @param sendername
+     * @param recipient
+     * @param body
+     * @param subject
+     * @throws Exception
+     */
     public static void sendMail(String sender, String sendername, String recipient, String body, String subject) throws Exception
     {
         Properties sysprop = System.getProperties();
@@ -70,6 +86,17 @@ public class QuickMail {
 
     }
 
+    /**
+     * Sende Mail mit Anhang
+     *
+     * @param sender
+     * @param sendername
+     * @param recipient
+     * @param body
+     * @param subject
+     * @param attachement
+     * @throws Exception
+     */
     public static void sendMailAttachment(String sender, String sendername, String recipient, String body, String subject, String attachement) throws Exception
     {
         Properties sysprop = System.getProperties();

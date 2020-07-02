@@ -7,6 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
+/**
+ * Divider - Arbeitsplatzbuchungssystem
+ *
+ * Stand-Alone-Klasse zur Extraktion und DB-Cleanup von Buchungen
+ *
+ */
+
 public class Divider {
 
     Properties p;

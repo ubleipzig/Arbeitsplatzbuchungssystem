@@ -7,6 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
+/**
+ * DataCore - Arbeitsplatzbuchungssystem
+ *
+ * Generiert CSV-Daten aus der DB anhand des Standortes und dem zeitlichen Bezugsintervall.
+ */
+
 public class DataCore {
 
     String institution = new String();

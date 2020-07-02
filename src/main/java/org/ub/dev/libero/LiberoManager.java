@@ -9,6 +9,9 @@ import java.util.*;
  * Workspace - Bookingsystem
  *
  * org.ub.dev.libero.LiberoManager
+ *
+ * Management-Klasse für die Anbindung an ein Libero-System
+ *
  */
 
 public class LiberoManager {
@@ -23,6 +26,13 @@ public class LiberoManager {
         this.p = p;
     }
 
+    /**
+     * Ermittelt die Emailadresse aus Libero unter Angabe der Bibliotheksnummer und des Libero-Tokens
+     *
+     * @param readernumber
+     * @param token
+     * @return
+     */
     public String getMailAdress(String readernumber, String token) {
 
         Wachtl wachtl = new Wachtl();
@@ -30,6 +40,14 @@ public class LiberoManager {
         String email = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getEmailAddress();
         return email;
     }
+
+    /**
+     * Login-Funktion für Mitarbeiter
+     *
+     * @param username
+     * @param password
+     * @return
+     */
 
     public String[] malogin(String username, String password) {
         Wachtl wachtl = new Wachtl();
@@ -57,6 +75,13 @@ public class LiberoManager {
         return token;
     }
 
+    /**
+     * Login-Funktion für Nutzer
+     *
+     * @param readernumber
+     * @param password
+     * @return
+     */
     public String[] login(String readernumber, String password) {
         Wachtl wachtl = new Wachtl();
         wachtl.setAuthenticatServiceURL(p.getProperty("authentication_url"));
@@ -91,6 +116,11 @@ public class LiberoManager {
         return retval;
     }
 
+    /**
+     * Abmeldung einer Libero-Auth des Nutzers/Mitarbeiters
+     *
+     * @param token
+     */
     public void close(String token) {
 
         Wachtl wachtl = new Wachtl();

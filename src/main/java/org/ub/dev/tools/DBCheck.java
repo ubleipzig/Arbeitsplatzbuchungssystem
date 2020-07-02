@@ -9,6 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
+/**
+ * DBCheck - Arbeitsplatzbuchungssystem
+ *
+ * Klasse zur Überprüfung von Buchungen - Test auf Mehrfachbuchungen
+ *
+ */
+
 public class DBCheck {
     public DBCheck() {
         init();
@@ -54,11 +61,9 @@ public class DBCheck {
 
                     if(a1<a&&b1>a&&b1<b) trapped = true;
 
-
-
-
                 }
 
+                //Potentielle Mehrfachbuchung erkannt!
                 if(trapped) {
                     System.out.println(entry);
                 }
