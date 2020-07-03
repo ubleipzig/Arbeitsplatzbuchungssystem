@@ -71,10 +71,6 @@ Jeder Standort kann über das *institution*-Tag dabei einzeln individuell konfig
 </institutions>
 ````
 
-Dafür gibt es mehrere Einstellungsmöglichkeiten:
-
-#### 1. Die Öffnungszeit
-
 Tagesöffnungszeiten lassen sich über das *interval*-Tag definieren. Dabei gelten die Attribute *from* und *until* in der Form "hh:mm" für den Zeitpunkt der Öffnung bzw. Schließung. Durch Angabe des *day*-Attributes lassen sich die Zeiten für einen spezifizierten Tag einstellen.
 Hier das Beispiel für die täglichen Öffnungszeiten von 8 Uhr bis 20 Uhr von Standort 1:
 
@@ -113,5 +109,18 @@ Beispiel für die Eingabe des 1. Mai 2020 als Schließtag:
     </specialClosureDays>
   </institution>
 ````
+
+Abschließend ein Beispiel für den Einsatz des *day*-Attributes beim *interval*-Tag. Wir gehen hier von einer Öffnungszeit von Montag bis Donnerstag von 8 Uhr bis 20 Uhr aus, Freitag von 8 Uhr bis 16 Uhr und Samstag/Sonntag soll der Standort geschlossen sein:
+
+````xml
+  <institution name="Standort 1">
+    <interval from="08:00" until="20:00"/>
+    <interval from="08:00" until="16:00" day="6"/>
+    <recurrentClosureDays>
+      7,1
+    </reccurentClosureDays>
+  </institution>
+````
+
 
 ...Fortsetzung folgt...
