@@ -72,7 +72,7 @@ Jeder Standort kann über das *institution*-Tag dabei einzeln individuell konfig
 ````
 
 Tagesöffnungszeiten lassen sich über das *interval*-Tag definieren. Dabei gelten die Attribute *from* und *until* in der Form "hh:mm" für den Zeitpunkt der Öffnung bzw. Schließung. Durch Angabe des *day*-Attributes lassen sich die Zeiten für einen spezifizierten Tag einstellen.
-Hier das Beispiel für die täglichen Öffnungszeiten von 8 Uhr bis 20 Uhr von Standort 1:
+Hier das Beispiel für die täglichen Öffnungszeiten von 8 Uhr bis 20 Uhr von Standort 1 (Montag bis Sonntag):
 
 ````xml
   <institution name="Standort 1">
@@ -93,7 +93,7 @@ Wenn das Wochenende als Schließtage eingestellt werden soll, kann dies so ausse
   </institution>
 ````
 Achtung: Im genutzten Kalender beginnt die Woche in der Zählung mit dem **Sonntag**, also mit 1.
-Demzufolge sind die Ziffern 7 und 1 die Codierung für Samstag und Sonntag. An beiden Tagen wird das System keine Buchungen zulassen.
+Demzufolge sind die Ziffern 7 und 1 die Codierung für Samstag und Sonntag. An beiden Tagen wird das System mit der obigen Konfiguration also keine Buchungen zulassen.
 
 Sollen spezielle sich nicht im Intervall (7 Tage) wiederholende Tage als Schließtage definiert werden, beispielsweise Feiertage oder Brückentage, so kann dies mit Hilfe des *specialClosureDays*-Tag vorgenommen werden. Hier muss das komplette Datum (bzw mehrere Datumsangaben durch Kommata getrennt) angegeben werden.
 Beispiel für die Eingabe des 1. Mai 2020 als Schließtag:
