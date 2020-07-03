@@ -36,4 +36,4 @@ booking (int workspaceId, Timestamp start, Timestamp end, varchar(100) readernum
 * institution - Standort
 
 
-Dokumentation folgt in Kürze
+...Fortsetzung folgt...
