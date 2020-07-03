@@ -89,7 +89,7 @@ Wenn das Wochenende als Schließtage eingestellt werden soll, kann dies so ausse
     <interval from="08:00" until="20:00"/>
     <recurrentClosureDays>
       7,1
-      </reccurentClosureDays>
+    </reccurentClosureDays>
   </institution>
 ````
 Achtung: Im genutzten Kalender beginnt die Woche in der Zählung mit dem **Sonntag**, also mit 1.
