@@ -122,5 +122,23 @@ Abschließend ein Beispiel für den Einsatz des *day*-Attributes beim *interval*
   </institution>
 ````
 
+## Build-Prozess und Systemstart
 
-...Fortsetzung folgt...
+### Erstellen der JAR-Datei
+
+Für das Kompilieren und den Zusammenbau der JAR-Datei mit den benötigten Bibliotheken wird **Gradle** verwendet.
+
+Der Aufruf
+````bash
+gradle fatJar
+````
+baut eine entsprechende JAR-Datei unter Einbeziehung aller notwendiger Bibliotheken (auch fatJar gennant).
+Das System nutzt unter anderem die externen Bibliotheken von *vertx*, *jdom* und *mysql*.
+
+### Start des API-Servers (für ein vorangestelltes Frontend)
+
+Um das Backend-System zu starten, genügt die Eingabe von:
+````bash
+java -cp BookingService.jar org.ub.dev.service.BookingService
+````
+Das System stellt nun diverse API-Endpoints auf REST-Basis zur Verfügung.
