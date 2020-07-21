@@ -110,14 +110,14 @@ public class BookingService {
         router.route("/booking/counter*").handler(BodyHandler.create());
         router.get("/booking/counter").handler(this::counter);
 
-        router.route("/booking/malogin").handler(BodyHandler.create());
-        router.post("/booking/malogin*").handler(this::malogin);
-        router.route("/booking/malogout").handler(BodyHandler.create());
-        router.post("/booking/malogout*").handler(this::malogout);
-        router.route("/booking/check").handler(BodyHandler.create());
-        router.post("/booking/check*").handler(this::checkReservation);
-        router.route("/booking/plan").handler(BodyHandler.create());
-        router.post("/booking/plan*").handler(this::plan);
+        router.route("/booking/malogin*").handler(BodyHandler.create());
+        router.post("/booking/malogin").handler(this::malogin);
+        router.route("/booking/malogout*").handler(BodyHandler.create());
+        router.post("/booking/malogout").handler(this::malogout);
+        router.route("/booking/check*").handler(BodyHandler.create());
+        router.post("/booking/check").handler(this::checkReservation);
+        router.route("/booking/plan*").handler(BodyHandler.create());
+        router.post("/booking/plan").handler(this::plan);
         router.route("/booking/mastorno*").handler(BodyHandler.create());
         router.post("/booking/mastorno").handler(this::mastorno);
 
@@ -187,7 +187,7 @@ public class BookingService {
         }
 
         for(HashMap institutions:institutionlist) {
-            if(institutions.get("institution").equals("Bibliothek Rechtswissenschaft")) continue;
+            //if(institutions.get("institution").equals("Bibliothek Rechtswissenschaft")) continue;
             retval+=institutions.get("institution")+"#";
         }
         if(retval.contains("#"))
