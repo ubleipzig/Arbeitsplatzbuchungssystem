@@ -329,6 +329,20 @@ public class BookingService {
         cal_today.set(Calendar.SECOND, 59);
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
+        Calendar cal_blocked = Calendar.getInstance();
+        cal_blocked.set(Calendar.HOUR_OF_DAY, 0);
+        cal_blocked.set(Calendar.MINUTE, 0);
+        cal_blocked.set(Calendar.SECOND, 0);
+        cal_blocked.set(Calendar.DAY_OF_MONTH, 27);
+        cal_blocked.set(Calendar.MONTH, Calendar.JULY);
+        cal_blocked.set(Calendar.YEAR, 2020);
+
+        if((cal.getTimeInMillis()<=cal_blocked.getTimeInMillis())&&institution.contains("Rechtswissenschaft")) {
+            bookingArray[1] = "";
+            bookingArray[3]= "notbookable";
+            return bookingArray;
+        }
+
         if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()||cal.getTimeInMillis()<System.currentTimeMillis()) {
             bookingArray[1] = "";
             bookingArray[3]= "outofreach";
