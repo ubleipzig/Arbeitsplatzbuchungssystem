@@ -92,11 +92,11 @@ public class BookingService {
 
         router.route().handler(CorsHandler.create(".*."));
         router.route("/booking/login*").handler(BodyHandler.create());
-        router.post("/booking/login").handler(this::login);
+        router.post("/booking/login").blockingHandler(this::login);
         router.route("/booking/logout*").handler(BodyHandler.create());
         router.post("/booking/logout").handler(this::logout);
         router.route("/booking/booking*").handler(BodyHandler.create());
-        router.post("/booking/booking").handler(this::booking);
+        router.post("/booking/booking").blockingHandler(this::booking, true);
         router.route("/booking/areas*").handler(BodyHandler.create());
         router.get("/booking/areas").handler(this::areas);
         router.route("/booking/timeslots*").handler(BodyHandler.create());
