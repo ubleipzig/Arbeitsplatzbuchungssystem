@@ -329,19 +329,83 @@ public class BookingService {
         cal_today.set(Calendar.SECOND, 59);
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
-        Calendar cal_blocked = Calendar.getInstance();
-        cal_blocked.set(Calendar.HOUR_OF_DAY, 0);
-        cal_blocked.set(Calendar.MINUTE, 0);
-        cal_blocked.set(Calendar.SECOND, 0);
-        cal_blocked.set(Calendar.DAY_OF_MONTH, 27);
-        cal_blocked.set(Calendar.MONTH, Calendar.JULY);
-        cal_blocked.set(Calendar.YEAR, 2020);
+        //** Überprüfe, ob die Buchung für die Rewi bereits vorgenommen werden kann : START
 
-        if((cal.getTimeInMillis()<=cal_blocked.getTimeInMillis())&&institution.contains("Rechtswissenschaft")) {
-            bookingArray[1] = "";
-            bookingArray[3]= "notbookable";
-            return bookingArray;
+        if(institution.contains("Rechtswissenschaft")) {
+
+            Calendar cal_blocked = Calendar.getInstance();
+            cal_blocked.set(Calendar.HOUR_OF_DAY, 0);
+            cal_blocked.set(Calendar.MINUTE, 0);
+            cal_blocked.set(Calendar.SECOND, 0);
+            cal_blocked.set(Calendar.DAY_OF_MONTH, 27);
+            cal_blocked.set(Calendar.MONTH, Calendar.JULY);
+            cal_blocked.set(Calendar.YEAR, 2020);
+
+            if ((cal.getTimeInMillis() <= cal_blocked.getTimeInMillis()) && institution.contains("Rechtswissenschaft")) {
+                bookingArray[1] = "";
+                bookingArray[3] = "notbookable";
+                return bookingArray;
+            }
         }
+        //** Überprüfe, ob die Buchung für die Rewi bereits vorgenommen werden kann : ENDE
+
+        //** Klassische Archäologie Schließung : START
+
+        if(institution.contains("Archäologie")) {
+
+            Calendar cal_blocked1 = Calendar.getInstance();
+            cal_blocked1.set(Calendar.HOUR_OF_DAY, 0);
+            cal_blocked1.set(Calendar.MINUTE, 0);
+            cal_blocked1.set(Calendar.SECOND, 0);
+            cal_blocked1.set(Calendar.DAY_OF_MONTH, 3);
+            cal_blocked1.set(Calendar.MONTH, Calendar.AUGUST);
+            cal_blocked1.set(Calendar.YEAR, 2020);
+
+            Calendar cal_blocked2 = Calendar.getInstance();
+            cal_blocked2.set(Calendar.HOUR_OF_DAY, 0);
+            cal_blocked2.set(Calendar.MINUTE, 0);
+            cal_blocked2.set(Calendar.SECOND, 0);
+            cal_blocked2.set(Calendar.DAY_OF_MONTH, 14);
+            cal_blocked2.set(Calendar.MONTH, Calendar.AUGUST);
+            cal_blocked2.set(Calendar.YEAR, 2020);
+
+            if (cal.getTimeInMillis() >= cal_blocked1.getTimeInMillis() && cal.getTimeInMillis() <= cal_blocked2.getTimeInMillis() && institution.contains("Archäologie")) {
+                bookingArray[1] = "";
+                bookingArray[3] = "notbookable2";
+                return bookingArray;
+            }
+        }
+        //** Klassische Archäologie Schließung : ENDE
+
+        //** Veterinärmedizin : START
+
+        if(institution.contains("Veterinärmedizin")) {
+
+            Calendar vcal = cal;
+            vcal.add(Calendar.MINUTE, Integer.parseInt(duration));
+            //vcal zeigt nun auf das Buchungsende
+
+            //datumsgrenzwert erstellen
+            Calendar limit = Calendar.getInstance();
+            limit.set(Calendar.HOUR_OF_DAY, 0);
+            limit.set(Calendar.MINUTE, 0);
+            limit.set(Calendar.SECOND, 0);
+            limit.set(Calendar.DAY_OF_MONTH, 3);
+            limit.set(Calendar.MONTH, Calendar.AUGUST);
+            limit.set(Calendar.YEAR, 2020);
+
+            if(cal.after(limit)) {
+
+                limit.add(Calendar.HOUR_OF_DAY, 16);
+
+                if (cal.after(limit)) {
+                    bookingArray[1] = "";
+                    bookingArray[3] = "notbookable3";
+                    return bookingArray;
+                }
+            }
+        }
+        //** Veterinärmedizin : ENDE
 
         if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()||cal.getTimeInMillis()<System.currentTimeMillis()) {
             bookingArray[1] = "";
@@ -1096,6 +1160,17 @@ public class BookingService {
     private void login(RoutingContext rc) {
 
         call_stats[7]++;
+
+        if(new File("maintanance").exists()) {
+            JsonObject answer_object = new JsonObject();
+            answer_object.put("token", "null");
+            answer_object.put("msg", "System befindet sich im Wartungsmodes. Anmeldungen sind zur Zeit nicht möglich.");
+
+            rc.response().headers().add("Content-type","application/json");
+
+            rc.response().end(answer_object.encodePrettily());
+            return;
+        }
 
         if(tokenmap.keySet().size()>=Integer.parseInt(p.getProperty("concurrent_user", "25"))) {
             System.out.println("too many users: "+tokenmap.keySet().size());
