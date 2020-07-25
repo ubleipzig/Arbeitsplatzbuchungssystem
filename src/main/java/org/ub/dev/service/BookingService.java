@@ -381,7 +381,7 @@ public class BookingService {
 
         if(institution.contains("Veterinärmedizin")) {
 
-            Calendar vcal = cal;
+            Calendar vcal = (Calendar)cal.clone();
             vcal.add(Calendar.MINUTE, Integer.parseInt(duration));
             //vcal zeigt nun auf das Buchungsende
 
@@ -553,6 +553,15 @@ public class BookingService {
 
         return bookingArray;
     }
+
+    /**
+     * Build statistics for every library depends on usage
+     */
+
+    private void buildStats() {
+
+    }
+
 
     /**
      * Logout eines Nutzers via Angabe der Parameter readernumber und des Libero-Tokens
