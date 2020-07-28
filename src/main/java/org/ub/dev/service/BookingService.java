@@ -371,7 +371,7 @@ public class BookingService {
             cal_blocked2.set(Calendar.MONTH, Calendar.AUGUST);
             cal_blocked2.set(Calendar.YEAR, 2020);
 
-            if (cal.getTimeInMillis() >= cal_blocked1.getTimeInMillis() && cal.getTimeInMillis() <= cal_blocked2.getTimeInMillis() && institution.contains("Archäologie")) {
+            if (cal.getTimeInMillis() >= cal_blocked1.getTimeInMillis() && cal.getTimeInMillis() <= cal_blocked2.getTimeInMillis() && area.contains("Ur-Frühgeschichte")) {
                 bookingArray[1] = "";
                 bookingArray[3] = "notbookable2";
                 return bookingArray;
@@ -567,13 +567,28 @@ public class BookingService {
         String institution = rc.request().getParam("institution");
         ArrayList<int[]> sevenDays = WorkloadStats.getInstance(p).getSevenDays(institution);
 
-        for(int[] day:sevenDays) {
+        /*for(int[] day:sevenDays) {
             for(int h:day) {
                 data+=h+",";
             }
             data = data.substring(0, data.length()-1);
             data+="\n";
+        }*/
+
+        data = "<table>";
+
+        for(int j=0;j<sevenDays.get(0).length;j++) {
+
+            data+="<tr>";
+
+            for (int i = 0; i < sevenDays.size(); i++) {
+                data+="<td>"+sevenDays.get(i)[j]+"</td>";
+            }
+
+            data+="</tr>";
         }
+
+        data+="</table>";
 
        rc.response().end(data);
 
