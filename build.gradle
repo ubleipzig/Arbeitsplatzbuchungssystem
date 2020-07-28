@@ -7,7 +7,7 @@ plugins {
 group 'org.ub.dev'
 version '1.0-SNAPSHOT'
 
-mainClassName="org.ub.dev.service.WorkloadStats"
+mainClassName="org.ub.dev.service.BookingService"
 
 compileJava.options.encoding = 'UTF-8'
 

@@ -17,39 +17,63 @@ public class WorkloadStats {
     ArrayList<HashMap<String, Object>> workspaces;
     ArrayList<HashMap<String, Object>> bookings;
 
-    public WorkloadStats(Properties p) {
+    long timestamp = 0L;
+
+    static WorkloadStats wls;
+
+    public static WorkloadStats getInstance(Properties p) {
+        if(wls==null) wls = new WorkloadStats(p);
+        return wls;
+    }
+
+    public void init() {
+
+    }
+
+    private WorkloadStats(Properties p) {
         this.p = p;
         cacheDB();
 
-        Calendar test = Calendar.getInstance();
-        test.set(Calendar.DAY_OF_MONTH, 18);
-        test.set(Calendar.MONTH, Calendar.JUNE);
-
-        System.out.println(getData("Bibliotheca Albertina", test));
     }
 
     private void cacheDB() {
+        System.out.println("Daten werden erneuert!");
         workspaces = new SQLHub(p).getMultiData("select * from workspace","bookingservice");
         bookings = new SQLHub(p).getMultiData("select * from booking","bookingservice");
+        timestamp = System.currentTimeMillis();
     }
 
-    private String getData(String inst, Calendar cal) {
+    public ArrayList<int[]> getSevenDays(String inst) {
 
-        //define checkdates
-        Calendar c1 = (Calendar)cal.clone();
-        Calendar c2 = (Calendar)cal.clone();
-        Calendar c3 = (Calendar)cal.clone();
-        Calendar c4 = (Calendar)cal.clone();
-        c1.set(Calendar.HOUR_OF_DAY, 8);
-        c1.set(Calendar.MINUTE, 0);
-        c2.set(Calendar.HOUR_OF_DAY, 12);
-        c2.set(Calendar.MINUTE, 0);
-        c3.set(Calendar.HOUR_OF_DAY, 16);
-        c3.set(Calendar.MINUTE, 0);
-        c4.set(Calendar.HOUR_OF_DAY, 20);
-        c4.set(Calendar.MINUTE, 0);
+        ArrayList<int[]> list = new ArrayList<>();
 
-        int c_8 = 0, c_12 = 0, c_16 = 0, c_20 = 0;
+        Calendar today = Calendar.getInstance();
+
+        for(int i=0;i<8;i++)
+        {
+            list.add(getData(inst, today));
+            today.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        return list;
+    }
+
+    private int[] getData(String inst, Calendar cal) {
+
+        if(System.currentTimeMillis()-timestamp>=300000) cacheDB();
+
+        Calendar cals[] = new Calendar[24];
+        for(int i=0;i<cals.length;i++)
+        {
+            cals[i] = (Calendar)cal.clone();
+            cals[i].set(Calendar.HOUR_OF_DAY, i);
+            cals[i].set(Calendar.MINUTE, 0);
+        }
+
+
+        int c_array[] = new int[24];
+        for(int i=0;i<c_array.length;i++)
+            c_array[i]=0;
 
         for(HashMap workspace:workspaces) {
             if(!workspace.get("institution").equals(inst)) continue;
@@ -62,23 +86,24 @@ public class WorkloadStats {
                 Timestamp ts_start = (Timestamp)booking.get("start");
                 Timestamp ts_end = (Timestamp)booking.get("end");
 
-                if(c1.getTimeInMillis()>=ts_start.getTime() && c1.getTimeInMillis()<=ts_end.getTime())
-                    c_8++;
-                if(c2.getTimeInMillis()>=ts_start.getTime() && c2.getTimeInMillis()<=ts_end.getTime())
-                    c_12++;
-                if(c3.getTimeInMillis()>=ts_start.getTime() && c3.getTimeInMillis()<=ts_end.getTime())
-                    c_16++;
-                if(c4.getTimeInMillis()>=ts_start.getTime() && c4.getTimeInMillis()<=ts_end.getTime())
-                    c_20++;
+                for(int i=0;i<cals.length;i++) {
+                    if(cals[i].getTimeInMillis()>=ts_start.getTime() && cals[i].getTimeInMillis()<=ts_end.getTime())
+                        c_array[i]++;
+                }
 
             }
 
 
         }
 
-        return c_8 +","+ c_12+","+c_16+","+c_20;
+        return c_array;
     }
 
+    /**
+     * Test-Aufruf als Stand-Alone-Applikation
+     *
+     * @param args
+     */
     public static void main(String args[]) {
         Properties p = new Properties();
         try {
@@ -86,7 +111,18 @@ public class WorkloadStats {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new WorkloadStats(p);
+        /*Calendar test = Calendar.getInstance();
+        test.set(Calendar.DAY_OF_MONTH, 18);
+        test.set(Calendar.MONTH, Calendar.JUNE);
+
+        int r[] = WorkloadStats.getInstance(p).getData("Bibliotheca Albertina",test);
+        for(int x:r) System.out.println(x);*/
+
+        for(int[] e:WorkloadStats.getInstance(p).getSevenDays("Bibliotheca Albertina")){
+            for(int i:e) System.out.print(i+" ");
+            System.out.println();
+        }
+
     }
 
 }

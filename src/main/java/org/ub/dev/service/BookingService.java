@@ -109,6 +109,8 @@ public class BookingService {
         router.post("/booking/checkdate").handler(this::checkdate);
         router.route("/booking/counter*").handler(BodyHandler.create());
         router.get("/booking/counter").handler(this::counter);
+        router.route("/booking/workload*").handler(BodyHandler.create());
+        router.get("/booking/workload").blockingHandler(this::workload);
 
         router.route("/booking/malogin*").handler(BodyHandler.create());
         router.post("/booking/malogin").handler(this::malogin);
@@ -555,10 +557,25 @@ public class BookingService {
     }
 
     /**
-     * Build statistics for every library depends on usage
+     * Build workload statistics for every library depends on usage
      */
 
-    private void buildStats() {
+    public void workload(RoutingContext rc) {
+
+        String data = new String();
+
+        String institution = rc.request().getParam("institution");
+        ArrayList<int[]> sevenDays = WorkloadStats.getInstance(p).getSevenDays(institution);
+
+        for(int[] day:sevenDays) {
+            for(int h:day) {
+                data+=h+",";
+            }
+            data = data.substring(0, data.length()-1);
+            data+="\n";
+        }
+
+       rc.response().end(data);
 
     }
 
@@ -1374,6 +1391,14 @@ public class BookingService {
         };
 
         cleanup.start();
+
+        Thread workloadsystem = new Thread(){
+          public void run() {
+              WorkloadStats.getInstance(p).init();
+          }
+        };
+
+        workloadsystem.start();
 
     }
 
