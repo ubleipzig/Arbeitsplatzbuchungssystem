@@ -385,6 +385,7 @@ public class BookingService {
 
             Calendar vcal = (Calendar)cal.clone();
             vcal.add(Calendar.MINUTE, Integer.parseInt(duration));
+
             //vcal zeigt nun auf das Buchungsende
 
             //datumsgrenzwert erstellen
@@ -398,9 +399,11 @@ public class BookingService {
 
             if(cal.after(limit)) {
 
-                limit.add(Calendar.HOUR_OF_DAY, 16);
+               limit = (Calendar)vcal.clone();
+               limit.set(Calendar.HOUR_OF_DAY, 16);
+               limit.set(Calendar.MINUTE, 1);
 
-                if (cal.after(limit)) {
+                if (vcal.after(limit)) {
                     bookingArray[1] = "";
                     bookingArray[3] = "notbookable3";
                     return bookingArray;
