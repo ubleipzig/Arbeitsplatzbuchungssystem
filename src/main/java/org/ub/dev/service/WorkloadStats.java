@@ -1,5 +1,6 @@
 package org.ub.dev.service;
 
+import io.vertx.core.json.JsonObject;
 import org.ub.dev.sql.SQLHub;
 
 import java.io.FileInputStream;
@@ -68,8 +69,8 @@ public class WorkloadStats {
             cals[i] = (Calendar)cal.clone();
             cals[i].set(Calendar.HOUR_OF_DAY, i);
             cals[i].set(Calendar.MINUTE, 0);
-        }
 
+        }
 
         int c_array[] = new int[24];
         for(int i=0;i<c_array.length;i++)
@@ -87,8 +88,12 @@ public class WorkloadStats {
                 Timestamp ts_end = (Timestamp)booking.get("end");
 
                 for(int i=0;i<cals.length;i++) {
+
                     if(cals[i].getTimeInMillis()>=ts_start.getTime() && cals[i].getTimeInMillis()<=ts_end.getTime())
+                    {
                         c_array[i]++;
+                    }
+
                 }
 
             }
@@ -113,15 +118,15 @@ public class WorkloadStats {
         }
         /*Calendar test = Calendar.getInstance();
         test.set(Calendar.DAY_OF_MONTH, 18);
-        test.set(Calendar.MONTH, Calendar.JUNE);
+        test.set(Calendar.MONTH, Calendar.JUNE);*/
 
-        int r[] = WorkloadStats.getInstance(p).getData("Bibliotheca Albertina",test);
-        for(int x:r) System.out.println(x);*/
+        int r[] = WorkloadStats.getInstance(p).getData("Bibliothek Veterinärmedizin",Calendar.getInstance());
+        for(int x:r) System.out.println(x);
 
-        for(int[] e:WorkloadStats.getInstance(p).getSevenDays("Bibliotheca Albertina")){
+        /*for(int[] e:WorkloadStats.getInstance(p).getSevenDays("Bibliothek Veterinärmedizin")){
             for(int i:e) System.out.print(i+" ");
             System.out.println();
-        }
+        }*/
 
     }
 

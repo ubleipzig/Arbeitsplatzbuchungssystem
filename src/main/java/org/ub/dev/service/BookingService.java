@@ -570,20 +570,18 @@ public class BookingService {
         String institution = rc.request().getParam("institution");
         ArrayList<int[]> sevenDays = WorkloadStats.getInstance(p).getSevenDays(institution);
 
-        /*for(int[] day:sevenDays) {
-            for(int h:day) {
-                data+=h+",";
-            }
-            data = data.substring(0, data.length()-1);
-            data+="\n";
-        }*/
+        int w = 70;
 
-        data = "<table>";
+        data = "<table><tr align='center'><th>&nbsp;</th><th style='width:"+w+"px'>heute</th><th style='width:"+w+"px'>morgen</th><th style='width:"+w+"px'>+2</th><th style='width:"+w+"px'>+3</th><th style='width:"+w+"px'>+4</th><th style='width:"+w+"px'>+5</th><th style='width:"+w+"px'>+6</th><th style='width:"+w+"px'>+7</th></tr>";
 
-        for(int j=0;j<sevenDays.get(0).length;j++) {
+        int starttime = Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]);
+        int endtime = Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]);
 
-            data+="<tr>";
+        for(int j=starttime;j<=endtime;j++) {
 
+
+            data+="<tr align='center'>";
+            data+="<th>"+j+" Uhr</th>";
             for (int i = 0; i < sevenDays.size(); i++) {
                 data+="<td>"+sevenDays.get(i)[j]+"</td>";
             }
