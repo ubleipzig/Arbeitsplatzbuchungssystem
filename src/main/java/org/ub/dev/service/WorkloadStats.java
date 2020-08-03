@@ -17,6 +17,7 @@ public class WorkloadStats {
 
     ArrayList<HashMap<String, Object>> workspaces;
     ArrayList<HashMap<String, Object>> bookings;
+    HashMap<String, Integer> numberOfSeats;
 
     long timestamp = 0L;
 
@@ -33,6 +34,7 @@ public class WorkloadStats {
 
     private WorkloadStats(Properties p) {
         this.p = p;
+        numberOfSeats = new HashMap<>();
         cacheDB();
 
     }
@@ -41,10 +43,13 @@ public class WorkloadStats {
         System.out.println("Daten werden erneuert!");
         workspaces = new SQLHub(p).getMultiData("select * from workspace","bookingservice");
         bookings = new SQLHub(p).getMultiData("select * from booking","bookingservice");
+
         timestamp = System.currentTimeMillis();
     }
 
     public ArrayList<int[]> getSevenDays(String inst) {
+
+
 
         ArrayList<int[]> list = new ArrayList<>();
 
@@ -59,7 +64,19 @@ public class WorkloadStats {
         return list;
     }
 
+    private void setNumberOfSeats(String inst) {
+
+
+        int nos = Integer.parseInt(String.valueOf(new SQLHub(p).getSingleData("select count(*) from workspace where institution = '"+inst+"'","bookingservice").get("count(*)")));
+
+        nos = Integer.parseInt(p.getProperty("nos_"+inst.replaceAll(" ",""), ""+nos));
+
+        numberOfSeats.put(inst, nos);
+    }
+
     private int[] getData(String inst, Calendar cal) {
+
+        if(!numberOfSeats.containsKey(inst)) setNumberOfSeats(inst);
 
         if(System.currentTimeMillis()-timestamp>=300000) cacheDB();
 
@@ -74,7 +91,7 @@ public class WorkloadStats {
 
         int c_array[] = new int[24];
         for(int i=0;i<c_array.length;i++)
-            c_array[i]=0;
+            c_array[i]=numberOfSeats.get(inst);
 
         for(HashMap workspace:workspaces) {
             if(!workspace.get("institution").equals(inst)) continue;
@@ -91,7 +108,7 @@ public class WorkloadStats {
 
                     if(cals[i].getTimeInMillis()>=ts_start.getTime() && cals[i].getTimeInMillis()<=ts_end.getTime())
                     {
-                        c_array[i]++;
+                        c_array[i]--;
                     }
 
                 }
