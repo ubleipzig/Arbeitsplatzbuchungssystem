@@ -86,6 +86,8 @@ public class WorkloadStats {
             cals[i] = (Calendar)cal.clone();
             cals[i].set(Calendar.HOUR_OF_DAY, i);
             cals[i].set(Calendar.MINUTE, 0);
+            cals[i].set(Calendar.SECOND, 0);
+            cals[i].set(Calendar.MILLISECOND, 0);
 
         }
 
@@ -116,6 +118,11 @@ public class WorkloadStats {
             }
 
 
+        }
+
+        //in Prozent umrechnen
+        for(int i=0;i< c_array.length;i++) {
+            c_array[i] = (100* c_array[i])/numberOfSeats.get(inst);
         }
 
         return c_array;
