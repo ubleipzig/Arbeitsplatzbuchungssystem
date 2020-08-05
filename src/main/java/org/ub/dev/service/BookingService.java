@@ -572,7 +572,17 @@ public class BookingService {
 
         int w = 70;
 
-        data = "<table><tr align='center'><th>&nbsp;</th><th style='width:"+w+"px'>heute</th><th style='width:"+w+"px'>morgen</th><th style='width:"+w+"px'>+2</th><th style='width:"+w+"px'>+3</th><th style='width:"+w+"px'>+4</th><th style='width:"+w+"px'>+5</th><th style='width:"+w+"px'>+6</th><th style='width:"+w+"px'>+7</th></tr>";
+        String dates[] = new String[6];
+
+        Calendar today = Calendar.getInstance();
+        today.add(Calendar.DAY_OF_MONTH, 1);
+        for(int i=0;i<6;i++) {
+            today.add(Calendar.DAY_OF_MONTH, 1);
+            dates[i] = today.get(Calendar.DAY_OF_MONTH)+"."+(today.get(Calendar.MONTH)+1)+".";
+        }
+
+        data = "<table><tr align='center'><th>&nbsp;</th><th style='width:"+w+"px'>heute</th><th style='width:"+w+"px'>morgen</th><th style='width:"+w+"px'>"+dates[0]+"</th><th style='width:"+w+"px'>"+dates[1]+
+                "</th><th style='width:"+w+"px'>"+dates[2]+"</th><th style='width:"+w+"px'>"+dates[3]+"</th><th style='width:"+w+"px'>"+dates[4]+"</th><th style='width:"+w+"px'>"+dates[5]+"</th></tr>";
 
         int starttime = Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]);
         int endtime = Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]);
@@ -583,7 +593,12 @@ public class BookingService {
             data+="<tr align='center'>";
             data+="<th>"+j+" Uhr</th>";
             for (int i = 0; i < sevenDays.size(); i++) {
-                data+="<td>"+sevenDays.get(i)[j]+"</td>";
+                int p = sevenDays.get(i)[j];
+                String colorcode = "style='background-color:";
+                if(p<=10) colorcode = colorcode+"red'";
+                else if(p>10&&p<=50) colorcode = colorcode+"yellow'";
+                else colorcode = colorcode+"green'";
+                data+="<td "+colorcode+">"+p+"%</td>";
             }
 
             data+="</tr>";
