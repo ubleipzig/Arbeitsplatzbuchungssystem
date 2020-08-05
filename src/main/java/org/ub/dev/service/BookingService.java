@@ -581,8 +581,8 @@ public class BookingService {
             dates[i] = today.get(Calendar.DAY_OF_MONTH)+"."+(today.get(Calendar.MONTH)+1)+".";
         }
 
-        data = "<table><tr align='center'><th>&nbsp;</th><th style='width:"+w+"px'>heute</th><th style='width:"+w+"px'>morgen</th><th style='width:"+w+"px'>"+dates[0]+"</th><th style='width:"+w+"px'>"+dates[1]+
-                "</th><th style='width:"+w+"px'>"+dates[2]+"</th><th style='width:"+w+"px'>"+dates[3]+"</th><th style='width:"+w+"px'>"+dates[4]+"</th><th style='width:"+w+"px'>"+dates[5]+"</th></tr>";
+        data = "<table><tr align='center'><th style='min-width:"+w+"px;'>&nbsp;</th><th style='min-width:"+w+"px;'>heute</th><th style='min-width:"+w+"px'>morgen</th><th style='min-width:"+w+"px'>"+dates[0]+"</th><th style='min-width:"+w+"px'>"+dates[1]+
+                "</th><th style='min-width:"+w+"px'>"+dates[2]+"</th><th style='min-width:"+w+"px'>"+dates[3]+"</th><th style='min-width:"+w+"px'>"+dates[4]+"</th><th style='min-width:"+w+"px'>"+dates[5]+"</th></tr>";
 
         int starttime = Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]);
         int endtime = Integer.parseInt(timeslots.get(institution).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]);
