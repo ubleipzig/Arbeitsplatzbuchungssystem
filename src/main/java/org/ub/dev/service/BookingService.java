@@ -61,6 +61,10 @@ public class BookingService {
     //Cache-Speicher für die Bereichsliste
     HashMap<String,ArrayList<HashMap<String, Object>>> areamap = new HashMap<>();
 
+    //Cache-Speicher für den workload
+    HashMap<String, Object[]> workloaddata = new HashMap<>();
+
+
     //Zähler für die angemeldeten Nutzer
     int user_counter = 0;
 
@@ -568,6 +572,16 @@ public class BookingService {
         String data = new String();
 
         String institution = rc.request().getParam("institution");
+
+        if(workloaddata.containsKey(institution)) {
+            long t = (long)workloaddata.get(institution)[0];
+            if(System.currentTimeMillis()-t<=300000) {
+                data = (String) workloaddata.get(institution)[1];
+                rc.response().end(data);
+                return;
+            }
+        }
+
         ArrayList<int[]> sevenDays = WorkloadStats.getInstance(p).getSevenDays(institution);
 
         int w = 70;
@@ -598,13 +612,16 @@ public class BookingService {
                 if(p<=10) colorcode = colorcode+"red'";
                 else if(p>10&&p<=50) colorcode = colorcode+"yellow'";
                 else colorcode = colorcode+"green'";
-                data+="<td "+colorcode+">"+p+"%</td>";
+                data+="<td "+colorcode+"></td>";
             }
 
             data+="</tr>";
         }
 
         data+="</table>";
+
+        Object content[] = {System.currentTimeMillis(), data};
+        workloaddata.put(institution, content);
 
        rc.response().end(data);
 
