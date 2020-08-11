@@ -324,6 +324,8 @@ public class BookingService {
         //bookingcode, workspaceid, emailadress
         String bookingArray[] = {"","","",""}; //UUID, workspaceId, email, msg
 
+        boolean special_query = false;
+
         //convert day|month|year|hour|minute to Timestamp
         Calendar cal = Calendar.getInstance();
         cal.set(Integer.parseInt(year), Integer.parseInt(month)-1, Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minute));
@@ -380,6 +382,11 @@ public class BookingService {
                 bookingArray[3] = "notbookable2";
                 return bookingArray;
             }
+
+            if (cal.getTimeInMillis() >= cal_blocked1.getTimeInMillis() && cal.getTimeInMillis() <= cal_blocked2.getTimeInMillis() && !area.contains("Ur-Frühgeschichte")) {
+                special_query = true;
+            }
+
         }
         //** Klassische Archäologie Schließung : ENDE
 
@@ -469,6 +476,8 @@ public class BookingService {
 
         //semaphore
         secured_area = true;
+
+        if(special_query) area_query = "and area = 'Archäologie'";
 
         SQLHub hub = new SQLHub(p);
         if(fitting.isEmpty())
