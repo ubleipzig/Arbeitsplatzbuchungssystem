@@ -894,17 +894,38 @@ public class BookingService {
             return;
         }
 
-
-
         String year, month, day, timeslot;
 
         year = from_date.split("-")[0];
         month = from_date.split("-")[1];
         day = from_date.split("-")[2];
 
-        timeslot = from_time.replaceAll(":","")+"-"+until_time.replaceAll(":","");
+        String bookingArray[] = null;
 
-        String bookingArray[] = do_booking(institution, area, day, month, year, timeslot, readernumber, token, fitting);
+        if(tslot>0) {
+            ArrayList<String> possibleGaps = WorkloadStats.getInstance(p).fitsInPlan(institution, Tools.setCalendarOnDate(Integer.parseInt(day), Integer.parseInt(month), Integer.parseInt(year)),fitting,area,tslot*60, timeslots);
+
+            for(String gap:possibleGaps) {
+                long bookingtime = Long.parseLong(gap.split(":")[1]);
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(bookingtime);
+
+                String day_gap = ""+c.get(Calendar.DAY_OF_MONTH);
+                String month_gap = ""+(c.get(Calendar.MONTH)+1);
+                String year_gap = ""+c.get(Calendar.YEAR);
+                String hour_gap = ""+c.get(Calendar.HOUR_OF_DAY);
+                String minute_gap = ""+c.get(Calendar.MINUTE);
+
+                bookingArray = do_booking(institution, area, day_gap, month_gap, year_gap, hour_gap, minute_gap, ""+(tslot*60), readernumber, token, fitting);
+                if(bookingArray[1]!=null) break;
+            }
+
+        }else {
+
+            timeslot = from_time.replaceAll(":", "") + "-" + until_time.replaceAll(":", "");
+
+            bookingArray = do_booking(institution, area, day, month, year, timeslot, readernumber, token, fitting);
+        }
 
         JsonObject json = new JsonObject();
         json.put("bookingCode", bookingArray[0]);

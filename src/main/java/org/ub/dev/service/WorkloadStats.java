@@ -73,19 +73,23 @@ public class WorkloadStats {
         numberOfSeats.put(inst, nos);
     }
 
-    public ArrayList<Integer> fitsInPlan(String inst, Calendar date, List<String> fitting, String area, long duration) {
+    public ArrayList<String> fitsInPlan(String inst, Calendar date, List<String> fitting, String area, long duration, HashMap<String, JsonObject> timeslots) {
 
-        ArrayList<Integer> possibleGaps = new ArrayList<>();
+        duration = duration*60*1000;    //convert from minutes to milliseconds
+
+        ArrayList<String> possibleGaps = new ArrayList<>();
 
         Calendar opening = (Calendar)date.clone();
-        opening.set(Calendar.HOUR_OF_DAY, 8);
-        opening.set(Calendar.MINUTE, 0);
+
+        opening.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]));
+        opening.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[1]));
         opening.set(Calendar.SECOND, 0);
         opening.set(Calendar.MILLISECOND, 0);
 
         Calendar closing = (Calendar)date.clone();
-        closing.set(Calendar.HOUR_OF_DAY, 23);
-        closing.set(Calendar.MINUTE, 45);
+
+        closing.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]));
+        closing.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[1])+1);
         closing.set(Calendar.SECOND, 0);
         closing.set(Calendar.MILLISECOND, 0);
 
@@ -99,9 +103,14 @@ public class WorkloadStats {
             {
                 String foundfitting = (String)workspace.get("fitting");
 
+                boolean nofitting = false;
+
                 for(String f:fitting) {
-                    if(!foundfitting.contains(f)) continue;
+
+                    if(!foundfitting.contains(f)) nofitting=true;
                 }
+
+                if(nofitting) continue;
 
             }
 
@@ -110,6 +119,7 @@ public class WorkloadStats {
             ArrayList<Long> bookedworkspace = new ArrayList<>();
             bookedworkspace.add(opening.getTimeInMillis());
 
+
             for(HashMap booking:bookings) {
                 if((int)booking.get("workspaceId")!=id) continue;
                 if(!booking.get("institution").equals(inst)) continue;
@@ -117,15 +127,24 @@ public class WorkloadStats {
                 Timestamp ts_start = (Timestamp)booking.get("start");
                 Timestamp ts_end = (Timestamp)booking.get("end");
 
-                bookedworkspace.add(ts_start.getTime());
-                bookedworkspace.add(ts_end.getTime());
+                if(ts_start.getTime()>=opening.getTimeInMillis()&&ts_end.getTime()<=closing.getTimeInMillis()) {
+                    bookedworkspace.add(ts_start.getTime());
+                    bookedworkspace.add(ts_end.getTime());
+                }
             }
 
             bookedworkspace.add(closing.getTimeInMillis());
 
+            Collections.sort(bookedworkspace);
+
             while(bookedworkspace.size()>0) {
+
                 long pos_duration = bookedworkspace.get(1) - bookedworkspace.get(0);
-                if(pos_duration>duration) possibleGaps.add(id);
+
+                if(pos_duration>=duration) {
+
+                    possibleGaps.add(id+":"+bookedworkspace.get(0));
+                }
                 bookedworkspace.remove(0);
                 bookedworkspace.remove(0);
             }
@@ -201,9 +220,9 @@ public class WorkloadStats {
             e.printStackTrace();
         }
 
-        List<String> fittings = Collections.emptyList();
+        //List<String> fittings = new ArrayList<>();
 
-        System.out.println(WorkloadStats.getInstance(p).fitsInPlan("Bibliotheca Albertina", Tools.setCalendarOnDate(18,8,2020), fittings, "no selection", 4*60*60*1000));
+        //System.out.println(WorkloadStats.getInstance(p).fitsInPlan("Bibliotheca Albertina", Tools.setCalendarOnDate(19,8,2020), fittings, "no selection", 4*60));
 
     }
 

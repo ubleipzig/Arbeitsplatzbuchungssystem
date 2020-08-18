@@ -1,6 +1,7 @@
 package org.ub.dev.tools;
 
 import java.util.Calendar;
+import java.util.Date;
 
 public class Tools {
 
@@ -14,6 +15,13 @@ public class Tools {
         calX.set(Calendar.YEAR, year);
 
         return calX;
+    }
+
+    public static Date getDateFromms(long ms) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(ms);
+
+        return c.getTime();
     }
 
 }
