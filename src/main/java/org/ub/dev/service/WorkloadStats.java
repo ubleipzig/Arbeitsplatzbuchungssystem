@@ -73,7 +73,7 @@ public class WorkloadStats {
         numberOfSeats.put(inst, nos);
     }
 
-    public ArrayList<Integer> fitsInPlan(String inst, Calendar date, String lkn, List<String> fitting, String area) {
+    public ArrayList<Integer> fitsInPlan(String inst, Calendar date, List<String> fitting, String area, long duration) {
 
         ArrayList<Integer> possibleGaps = new ArrayList<>();
 
@@ -107,7 +107,8 @@ public class WorkloadStats {
 
             int id = (int)workspace.get("id");
 
-            ArrayList<Timestamp> bookedworkspace = new ArrayList<>();
+            ArrayList<Long> bookedworkspace = new ArrayList<>();
+            bookedworkspace.add(opening.getTimeInMillis());
 
             for(HashMap booking:bookings) {
                 if((int)booking.get("workspaceId")!=id) continue;
@@ -116,16 +117,19 @@ public class WorkloadStats {
                 Timestamp ts_start = (Timestamp)booking.get("start");
                 Timestamp ts_end = (Timestamp)booking.get("end");
 
-                bookedworkspace.add(ts_start);
-                bookedworkspace.add(ts_end);
+                bookedworkspace.add(ts_start.getTime());
+                bookedworkspace.add(ts_end.getTime());
             }
 
+            bookedworkspace.add(closing.getTimeInMillis());
 
-
+            while(bookedworkspace.size()>0) {
+                long pos_duration = bookedworkspace.get(1) - bookedworkspace.get(0);
+                if(pos_duration>duration) possibleGaps.add(id);
+                bookedworkspace.remove(0);
+                bookedworkspace.remove(0);
+            }
         }
-
-
-
 
         return possibleGaps;
     }
@@ -196,17 +200,10 @@ public class WorkloadStats {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        /*Calendar test = Calendar.getInstance();
-        test.set(Calendar.DAY_OF_MONTH, 18);
-        test.set(Calendar.MONTH, Calendar.JUNE);*/
 
-        int r[] = WorkloadStats.getInstance(p).getData("Bibliothek Veterinärmedizin",Calendar.getInstance());
-        for(int x:r) System.out.println(x);
+        List<String> fittings = Collections.emptyList();
 
-        /*for(int[] e:WorkloadStats.getInstance(p).getSevenDays("Bibliothek Veterinärmedizin")){
-            for(int i:e) System.out.print(i+" ");
-            System.out.println();
-        }*/
+        System.out.println(WorkloadStats.getInstance(p).fitsInPlan("Bibliotheca Albertina", Tools.setCalendarOnDate(18,8,2020), fittings, "no selection", 4*60*60*1000));
 
     }
 
