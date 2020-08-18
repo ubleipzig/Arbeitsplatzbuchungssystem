@@ -15,6 +15,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.ub.dev.libero.LiberoManager;
 import org.ub.dev.sql.SQLHub;
+import org.ub.dev.tools.Tools;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,7 +67,6 @@ public class BookingService {
 
 
     //Zähler für die angemeldeten Nutzer
-    int user_counter = 0;
 
     public static boolean secured_area = false;
 
@@ -166,7 +166,7 @@ public class BookingService {
         results+="Storno: "+call_stats[5]+"\n";
         results+="Logout: "+call_stats[6]+"\n";
         results+="Login: "+call_stats[7]+"\n";
-        results+="User-Count:"+user_counter+"\n";
+        results+="User-Count (HashMap):"+tokenmap.size()+"\n";
         results+="tokenmap:"+tokenmap+"\n";
         results+="tokentimes:"+tokentimes+"\n";
 
@@ -324,7 +324,7 @@ public class BookingService {
         //bookingcode, workspaceid, emailadress
         String bookingArray[] = {"","","",""}; //UUID, workspaceId, email, msg
 
-        boolean special_query = false;
+        boolean special_query = false, special_query1 = false;
 
         //convert day|month|year|hour|minute to Timestamp
         Calendar cal = Calendar.getInstance();
@@ -336,26 +336,6 @@ public class BookingService {
         cal_today.set(Calendar.MINUTE, 59);
         cal_today.set(Calendar.SECOND, 59);
         cal_today.add(Calendar.DAY_OF_MONTH,7);
-
-        //** Überprüfe, ob die Buchung für die Rewi bereits vorgenommen werden kann : START
-
-        if(institution.contains("Rechtswissenschaft")) {
-
-            Calendar cal_blocked = Calendar.getInstance();
-            cal_blocked.set(Calendar.HOUR_OF_DAY, 0);
-            cal_blocked.set(Calendar.MINUTE, 0);
-            cal_blocked.set(Calendar.SECOND, 0);
-            cal_blocked.set(Calendar.DAY_OF_MONTH, 27);
-            cal_blocked.set(Calendar.MONTH, Calendar.JULY);
-            cal_blocked.set(Calendar.YEAR, 2020);
-
-            if ((cal.getTimeInMillis() <= cal_blocked.getTimeInMillis()) && institution.contains("Rechtswissenschaft")) {
-                bookingArray[1] = "";
-                bookingArray[3] = "notbookable";
-                return bookingArray;
-            }
-        }
-        //** Überprüfe, ob die Buchung für die Rewi bereits vorgenommen werden kann : ENDE
 
         //** Klassische Archäologie Schließung : START
 
@@ -389,6 +369,27 @@ public class BookingService {
 
         }
         //** Klassische Archäologie Schließung : ENDE
+
+        //** BA Bauarbeiten : START
+
+        if(institution.contains("Bibliotheca Albertina")) {
+            Calendar c1 = Tools.setCalendarOnDate(24, 8, 2020);
+            Calendar c2 = Tools.setCalendarOnDate(4, 9, 2020);
+
+            if(cal.getTimeInMillis() >= c1.getTimeInMillis() && cal.getTimeInMillis() <= c2.getTimeInMillis())
+            {
+                if(area.contains("Ost 1. OG")) {
+                    bookingArray[1] = "";
+                    bookingArray[3] = "notbookable4";
+                    return bookingArray;
+                }
+
+                special_query1 = true;
+            }
+        }
+
+         //** BA Bauarbeiten : ENDE
+
 
         //** Veterinärmedizin : START
 
@@ -478,6 +479,7 @@ public class BookingService {
         secured_area = true;
 
         if(special_query) area_query = "and area = 'Archäologie'";
+        if(special_query1) area_query+= " and area not like 'Ost 1. OG'";
 
         SQLHub hub = new SQLHub(p);
         if(fitting.isEmpty())
@@ -653,8 +655,6 @@ public class BookingService {
                 tokentimes.remove(readernumber);
             }
         }
-
-        user_counter--;
     }
 
     /**
@@ -884,6 +884,7 @@ public class BookingService {
         List<String> fitting = rc.request().formAttributes().getAll("fitting");
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
+        int tslot = Integer.parseInt(rc.request().formAttributes().get("tslot"));
 
         if(!tokenmap.get(readernumber).equals(token)) {
             JsonObject json = new JsonObject();
@@ -892,6 +893,8 @@ public class BookingService {
 
             return;
         }
+
+
 
         String year, month, day, timeslot;
 
@@ -1268,8 +1271,6 @@ public class BookingService {
             return;
         }
 
-        user_counter++;
-
         String readernumber = rc.request().formAttributes().get("readernumber");
         String password = rc.request().formAttributes().get("password");
 
@@ -1284,14 +1285,11 @@ public class BookingService {
         if(token==null||msg.equals("Wrong readernumber or password")) {
             token="null";
             msg = "Lesekartennummer oder Password falsch.";
-            user_counter--;
         }
 
         if(!token.equals("null")) {
 
             //add relation readernumber <-> token to the map
-
-            if(tokenmap.containsKey(readernumber)) user_counter--;
 
             tokenmap.put(readernumber, token);
             tokentimes.put(readernumber, System.currentTimeMillis());
@@ -1305,7 +1303,6 @@ public class BookingService {
 
         if(msg.equals("Wrong category")) {
             msg = "Leider gibt es für Ihre Nutzerkategorie keine Buchungserlaubnis.";
-            user_counter--;
         }
 
         JsonObject answer_object = new JsonObject();
@@ -1419,7 +1416,6 @@ public class BookingService {
                       if (System.currentTimeMillis() - l >= (15 * 60 * 1000))
                       {
                           candidates.add(t);
-                          user_counter--;
                       }
                   }
 

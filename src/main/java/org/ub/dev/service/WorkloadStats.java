@@ -2,14 +2,13 @@ package org.ub.dev.service;
 
 import io.vertx.core.json.JsonObject;
 import org.ub.dev.sql.SQLHub;
+import org.ub.dev.tools.Tools;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 
 public class WorkloadStats {
 
@@ -72,6 +71,63 @@ public class WorkloadStats {
         nos = Integer.parseInt(p.getProperty("nos_"+inst.replaceAll(" ",""), ""+nos));
 
         numberOfSeats.put(inst, nos);
+    }
+
+    public ArrayList<Integer> fitsInPlan(String inst, Calendar date, String lkn, List<String> fitting, String area) {
+
+        ArrayList<Integer> possibleGaps = new ArrayList<>();
+
+        Calendar opening = (Calendar)date.clone();
+        opening.set(Calendar.HOUR_OF_DAY, 8);
+        opening.set(Calendar.MINUTE, 0);
+        opening.set(Calendar.SECOND, 0);
+        opening.set(Calendar.MILLISECOND, 0);
+
+        Calendar closing = (Calendar)date.clone();
+        closing.set(Calendar.HOUR_OF_DAY, 23);
+        closing.set(Calendar.MINUTE, 45);
+        closing.set(Calendar.SECOND, 0);
+        closing.set(Calendar.MILLISECOND, 0);
+
+        for(HashMap workspace:workspaces) {
+            if (!workspace.get("institution").equals(inst)) continue;
+            if(!area.equals("no selection")) {
+                if (!workspace.get("area").equals(area)) continue;
+            }
+
+            if(!fitting.isEmpty())
+            {
+                String foundfitting = (String)workspace.get("fitting");
+
+                for(String f:fitting) {
+                    if(!foundfitting.contains(f)) continue;
+                }
+
+            }
+
+            int id = (int)workspace.get("id");
+
+            ArrayList<Timestamp> bookedworkspace = new ArrayList<>();
+
+            for(HashMap booking:bookings) {
+                if((int)booking.get("workspaceId")!=id) continue;
+                if(!booking.get("institution").equals(inst)) continue;
+
+                Timestamp ts_start = (Timestamp)booking.get("start");
+                Timestamp ts_end = (Timestamp)booking.get("end");
+
+                bookedworkspace.add(ts_start);
+                bookedworkspace.add(ts_end);
+            }
+
+
+
+        }
+
+
+
+
+        return possibleGaps;
     }
 
     private int[] getData(String inst, Calendar cal) {
