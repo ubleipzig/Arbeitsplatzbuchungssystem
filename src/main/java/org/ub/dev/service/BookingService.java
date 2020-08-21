@@ -322,7 +322,7 @@ public class BookingService {
          */
 
         //bookingcode, workspaceid, emailadress
-        String bookingArray[] = {"","","",""}; //UUID, workspaceId, email, msg
+        String bookingArray[] = {"","","","",""}; //UUID, workspaceId, email, msg, bookingtimes
 
         boolean special_query = false, special_query1 = false;
 
@@ -557,6 +557,7 @@ public class BookingService {
             sendMail(email, readernumber, institution, area, workspace_id, day, month, year, start_sql, end_sql, bookingArray[0]);
 
             bookingArray[2] = email;
+            bookingArray[4] = start_sql.getTime()+":"+end_sql.getTime();
 
             SQLHub hub_intern = new SQLHub(p);
             hub_intern.executeData("insert into booking (workspaceId, start, end, readernumber, bookingCode, institution) values ('" + workspace_id + "','" + start_sql + "','" + end_sql + "','" + readernumber + "','"+bookingArray[0]+"','"+institution.trim()+"')", "bookingservice");
@@ -885,6 +886,7 @@ public class BookingService {
         String readernumber = rc.request().formAttributes().get("readernumber");
         String token = rc.request().formAttributes().get("token");
         int tslot = Integer.parseInt(rc.request().formAttributes().get("tslot"));
+        int preference = Integer.parseInt(rc.request().formAttributes().get("preference"));
 
         if(!tokenmap.get(readernumber).equals(token)) {
             JsonObject json = new JsonObject();
@@ -900,13 +902,29 @@ public class BookingService {
         month = from_date.split("-")[1];
         day = from_date.split("-")[2];
 
-        String bookingArray[] = null;
+        String bookingArray[] = {"","","","",""};
 
         if(tslot>0) {
             ArrayList<String> possibleGaps = WorkloadStats.getInstance(p).fitsInPlan(institution, Tools.setCalendarOnDate(Integer.parseInt(day), Integer.parseInt(month), Integer.parseInt(year)),fitting,area,tslot*60, timeslots);
 
+            long c0 = 0, c1 = 0;
+            if(preference==1) {
+                c0 = Tools.setCalendarOnComplete(Integer.parseInt(day), Integer.parseInt(month), Integer.parseInt(year), 12, 0).getTimeInMillis();
+            }
+            if(preference==2) {
+                c0 = Tools.setCalendarOnComplete(Integer.parseInt(day), Integer.parseInt(month), Integer.parseInt(year), 12, 0).getTimeInMillis();
+                c1 = Tools.setCalendarOnComplete(Integer.parseInt(day), Integer.parseInt(month), Integer.parseInt(year), 18, 0).getTimeInMillis();
+            }
+            if(preference==3) c0 = Tools.setCalendarOnComplete(Integer.parseInt(day), Integer.parseInt(month), Integer.parseInt(year), 18, 0).getTimeInMillis();
+
             for(String gap:possibleGaps) {
                 long bookingtime = Long.parseLong(gap.split(":")[1]);
+
+                if(preference==1&&bookingtime>c0) continue;
+                if(preference==2&&(bookingtime<c0||bookingtime>c1)) continue;
+                if(preference==3&&bookingtime<=c0) continue;
+
+
                 Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(bookingtime);
 
@@ -932,6 +950,7 @@ public class BookingService {
         json.put("workspaceId", bookingArray[1]);
         json.put("email", bookingArray[2]);
         json.put("message", bookingArray[3]);
+        json.put("bookingtime", bookingArray[4]);
 
         rc.response().end(json.encodePrettily());
 

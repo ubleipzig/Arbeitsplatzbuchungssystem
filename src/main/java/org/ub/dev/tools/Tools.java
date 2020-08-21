@@ -24,4 +24,16 @@ public class Tools {
         return c.getTime();
     }
 
+    public static Calendar setCalendarOnComplete(int day, int month, int year, int hour, int minute) {
+        Calendar calX = Calendar.getInstance();
+        calX.set(Calendar.HOUR_OF_DAY, hour);
+        calX.set(Calendar.MINUTE, minute);
+        calX.set(Calendar.SECOND, 0);
+        calX.set(Calendar.DAY_OF_MONTH, day);
+        calX.set(Calendar.MONTH, month-1);
+        calX.set(Calendar.YEAR, year);
+
+        return calX;
+    }
+
 }
