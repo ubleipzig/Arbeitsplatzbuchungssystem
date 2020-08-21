@@ -137,13 +137,16 @@ public class WorkloadStats {
 
             Collections.sort(bookedworkspace);
 
+            boolean free = false;
+            if(bookedworkspace.size()==2) free = true;
+
             while(bookedworkspace.size()>0) {
 
                 long pos_duration = bookedworkspace.get(1) - bookedworkspace.get(0);
 
                 if(pos_duration>=duration) {
-
-                    possibleGaps.add(id+":"+bookedworkspace.get(0));
+                    if(free) possibleGaps.add(id+":"+bookedworkspace.get(0)+":F");
+                    possibleGaps.add(id+":"+bookedworkspace.get(0)+":N");
                 }
                 bookedworkspace.remove(0);
                 bookedworkspace.remove(0);

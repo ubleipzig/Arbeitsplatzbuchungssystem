@@ -920,10 +920,13 @@ public class BookingService {
             for(String gap:possibleGaps) {
                 long bookingtime = Long.parseLong(gap.split(":")[1]);
 
-                if(preference==1&&bookingtime>c0) continue;
-                if(preference==2&&(bookingtime<c0||bookingtime>c1)) continue;
-                if(preference==3&&bookingtime<=c0) continue;
+                String free_indicator = gap.split(":")[2];
 
+                if(preference==1&&bookingtime>c0) continue;
+                if(preference==2&&(bookingtime<c0||bookingtime>c1)&&free_indicator.equals("N")) continue;
+                if(preference==3&&bookingtime<=c0&&free_indicator.equals("N")) continue;
+
+                if(preference>1&&free_indicator.equals("F")) bookingtime = c0;
 
                 Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(bookingtime);
