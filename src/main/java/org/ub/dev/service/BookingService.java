@@ -1128,9 +1128,20 @@ public class BookingService {
         Timestamp t = Timestamp.from(cal.toInstant());
 
         ArrayList<HashMap<String, Object>> adminlist = new SQLHub(p).getMultiData("select * from booking where readernumber = '"+readernumber+"' and end >= '"+t.toLocalDateTime()+"'", "bookingservice");
-        System.out.println(adminlist);
-
         JsonObject json = new JsonObject();
+        JsonArray array = new JsonArray();
+        for(HashMap hm:adminlist) {
+            JsonObject obj_0 = new JsonObject();
+            obj_0.put("institution", hm.get("institution"));
+            obj_0.put("start", String.valueOf(hm.get("start")));
+            obj_0.put("end", String.valueOf(hm.get("end")));
+            obj_0.put("id", hm.get("workspaceId"));
+
+            System.out.println(obj_0.encodePrettily());
+
+            array.add(obj_0);
+        }
+        json.put("bookings", array);
 
         rc.response().headers().add("Content-type","application/json");
         rc.response().end(json.encodePrettily());
