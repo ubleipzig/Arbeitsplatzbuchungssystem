@@ -129,6 +129,9 @@ public class BookingService {
 
         router.route("/booking/stats*").handler(BodyHandler.create());
         router.get("/booking/stats").handler(this::stats);
+
+        router.route("/booking/admin*").handler(BodyHandler.create());
+        router.post("/booking/admin").blockingHandler(this::admin);
     }
 
     /**
@@ -1109,6 +1112,28 @@ public class BookingService {
         if(checkdateboolean) rc.response().end("true");
 
         rc.response().end("false");
+
+    }
+
+    private void admin(RoutingContext rc) {
+        String token = rc.getBodyAsJson().getString("token");
+        String readernumber = rc.getBodyAsJson().getString("readernumber");
+
+        if(!tokenmap.containsValue(token)) {
+            rc.response().end();
+            return;
+        }
+
+        Calendar cal = Calendar.getInstance();
+        Timestamp t = Timestamp.from(cal.toInstant());
+
+        ArrayList<HashMap<String, Object>> adminlist = new SQLHub(p).getMultiData("select * from booking where readernumber = '"+readernumber+"' and end >= '"+t.toLocalDateTime()+"'", "bookingservice");
+        System.out.println(adminlist);
+
+        JsonObject json = new JsonObject();
+
+        rc.response().headers().add("Content-type","application/json");
+        rc.response().end(json.encodePrettily());
 
     }
 
