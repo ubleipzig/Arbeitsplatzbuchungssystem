@@ -485,26 +485,7 @@ public class BookingService {
         if(special_query1) area_query+= " and area not like 'Ost 1. OG'";
 
         SQLHub hub = new SQLHub(p);
-        if(fitting.isEmpty())
-            result = hub.getMultiData("select id, area from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
-        else
-        {
-            String fitting_query = "";
-            for(String f:fitting) {
-                if(f.equals("kein PC"))
-                    fitting_query = "and fitting not like '%PC%'";
-                else if(f.equals("mit Strom"))
-                    fitting_query = "and fitting not like '%ohne Strom%'";
-                else
-                    fitting_query+= "and fitting like '%"+f+"%'";
-            }
-
-            String query = "select id, area from workspace where institution = '"+institution.trim()+"' "+area_query+" "+fitting_query;
-
-            //System.out.println(query);
-
-            result = hub.getMultiData(query, "bookingservice");
-        }
+        result = hub.getMultiData("select id, area, fitting from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
 
         Collections.shuffle(result);
 
@@ -515,8 +496,31 @@ public class BookingService {
         for(HashMap<String, Object> workspace:result) {
             workspace_id = (int)workspace.get("id");
             found_area = (String)workspace.get("area");
-            SQLHub hub_intern = new SQLHub(p);
+            String fittings = (String)workspace.get("fitting");
 
+            boolean notuseable = false;
+            if(!fitting.isEmpty()) {
+                for(String f:fitting) {
+                    if(f.equals("mit Strom")) {
+                        if(fittings.contains("ohne Strom")){notuseable=true;}
+                    }
+                    if(f.equals("PC")) {
+                        if(!fittings.contains("PC")){notuseable=true;}
+                    }
+                    if(f.equals("kein PC")) {
+                        if(fittings.contains("PC")) notuseable=true;
+                    }
+                    if(f.equals("LAN")) {
+                        if(!fittings.contains("LAN")) notuseable=true;
+                    }
+                    if(f.equals("Steharbeitsplatz")) {
+                        if(!fittings.contains("Steharbeitsplatz")) notuseable=true;
+                    }
+                }
+                if(notuseable) continue;
+            }
+
+            SQLHub hub_intern = new SQLHub(p);
             ArrayList<HashMap<String, Object>> possible_conflicts = hub_intern.getMultiData("select start, end from booking where workspaceId ="+workspace_id+" and institution = '"+institution.trim()+"'","bookingservice");
             boolean trapped = false;
             for(HashMap<String, Object> pc:possible_conflicts) {
