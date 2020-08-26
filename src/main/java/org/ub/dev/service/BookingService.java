@@ -1137,11 +1137,9 @@ public class BookingService {
         for(HashMap hm:adminlist) {
             JsonObject obj_0 = new JsonObject();
             obj_0.put("institution", hm.get("institution"));
-            obj_0.put("start", String.valueOf(hm.get("start")));
-            obj_0.put("end", String.valueOf(hm.get("end")));
+            obj_0.put("start", ((Timestamp)hm.get("start")).getTime());
+            obj_0.put("end", ((Timestamp)hm.get("end")).getTime());
             obj_0.put("id", hm.get("workspaceId"));
-
-            System.out.println(obj_0.encodePrettily());
 
             array.add(obj_0);
         }

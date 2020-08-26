@@ -99,7 +99,7 @@ public class WorkloadStats {
                 if (!workspace.get("area").equals(area)) continue;
             }
 
-            if(!fitting.isEmpty())
+            /*if(!fitting.isEmpty())
             {
                 String foundfitting = (String)workspace.get("fitting");
 
@@ -112,7 +112,7 @@ public class WorkloadStats {
 
                 if(nofitting) continue;
 
-            }
+            }*/
 
             int id = (int)workspace.get("id");
 
