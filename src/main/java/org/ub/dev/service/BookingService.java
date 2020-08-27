@@ -108,7 +108,7 @@ public class BookingService {
         router.route("/booking/institutions*").handler(BodyHandler.create());
         router.get("/booking/institutions").handler(this::institutions);
         router.route("/booking/storno*").handler(BodyHandler.create());
-        router.post("/booking/storno").handler(this::storno);
+        router.post("/booking/storno").blockingHandler(this::storno);
         router.route("/booking/checkdate*").handler(BodyHandler.create());
         router.post("/booking/checkdate").handler(this::checkdate);
         router.route("/booking/counter*").handler(BodyHandler.create());
@@ -132,6 +132,8 @@ public class BookingService {
 
         router.route("/booking/admin*").handler(BodyHandler.create());
         router.post("/booking/admin").blockingHandler(this::admin);
+        router.route("/booking/modify*").handler(BodyHandler.create());
+        router.post("/booking/modify").blockingHandler(this::modify);
     }
 
     /**
@@ -1119,6 +1121,70 @@ public class BookingService {
 
     }
 
+    private void modify(RoutingContext rc) {
+        String readernumber = rc.request().formAttributes().get("readernumber");
+        String bookingcode = rc.request().formAttributes().get("bookingcode");
+        String token = rc.request().formAttributes().get("token");
+        String from = rc.request().formAttributes().get("from");
+        String until = rc.request().formAttributes().get("until");
+
+        String msg = "";
+
+        rc.response().headers().add("Content-type","application/json");
+        JsonObject jso = new JsonObject();
+
+
+        if(!tokenmap.containsKey(readernumber)|!tokenmap.get(readernumber).equals(token))
+        {
+            msg = "Sie sind nicht eingeloggt!";
+
+            jso.put("msg", msg);
+
+            rc.response().end(jso.encodePrettily());
+            return;
+        }
+
+        HashMap dataset = new SQLHub(p).getSingleData("select * from booking where bookingCode = '"+bookingcode+"'","bookingservice");
+
+        // hole die Zeitstempel aus der Datenbank und erreichne daraus Calendar-Datentypen
+        Timestamp ts_start = (Timestamp)dataset.get("start");
+        Timestamp ts_end = (Timestamp)dataset.get("end");
+        Calendar cal_start = Calendar.getInstance();
+        cal_start.setTimeInMillis(ts_start.getTime());
+        Calendar cal_end = Calendar.getInstance();
+        cal_end.setTimeInMillis(ts_end.getTime());
+
+        Calendar compare_start = (Calendar)cal_start.clone();
+        compare_start.set(Calendar.HOUR_OF_DAY, Integer.parseInt(from.split(":")[0]));
+        compare_start.set(Calendar.MINUTE, Integer.parseInt(from.split(":")[1]));
+
+        Calendar compare_end = (Calendar)cal_end.clone();
+        compare_end.set(Calendar.HOUR_OF_DAY, Integer.parseInt(until.split(":")[0]));
+        compare_end.set(Calendar.MINUTE, Integer.parseInt(until.split(":")[1]));
+
+        long duration = (ts_end.getTime()-ts_start.getTime())/(1000*60);
+
+        if(compare_end.after(cal_end)||compare_start.before(cal_start)) {
+
+            msg = "Sie können die Buchungszeit nur verkürzen, nicht verlängern oder verschieben!";
+
+        }else {
+
+            Timestamp new_start = Timestamp.from(compare_start.toInstant());
+            Timestamp new_end = Timestamp.from(compare_end.toInstant());
+            long new_duration = (new_end.getTime()-new_start.getTime())/(1000*60);
+
+            new SQLHub(p).executeData("update booking set start = '"+new_start+"', end = '"+new_end+"' where bookingCode = '"+bookingcode+"' and readernumber = '"+readernumber+"'","bookingservice");
+            new SQLHub(p).executeData("update user set past = past-"+duration+" where readernumber = '"+readernumber+"'","bookingservice");
+            new SQLHub(p).executeData("update user set past = past+"+new_duration+" where readernumber = '"+readernumber+"'", "bookingservice");
+
+            msg = "Die Änderungen wurden übernommen.";
+        }
+
+        jso.put("msg",msg);
+        rc.response().end(jso.encodePrettily());
+    }
+
     private void admin(RoutingContext rc) {
         String token = rc.getBodyAsJson().getString("token");
         String readernumber = rc.getBodyAsJson().getString("readernumber");
@@ -1140,6 +1206,7 @@ public class BookingService {
             obj_0.put("start", ((Timestamp)hm.get("start")).getTime());
             obj_0.put("end", ((Timestamp)hm.get("end")).getTime());
             obj_0.put("id", hm.get("workspaceId"));
+            obj_0.put("bookingCode", hm.get("bookingCode"));
 
             array.add(obj_0);
         }
@@ -1254,21 +1321,12 @@ public class BookingService {
         call_stats[5]++;
 
         String readernumber = rc.request().formAttributes().get("readernumber");
-        String password = rc.request().formAttributes().get("password");
         String bookingcode = rc.request().formAttributes().get("bookingcode");
+        String token = rc.request().formAttributes().get("token");
 
-        String logvalue[] = new LiberoManager(p).login(readernumber, password);
+        String msg = "";
 
-        String token = logvalue[0];
-        String msg = logvalue[1];
-
-        //Wenn token==null, dann war der Login nicht möglich
-        if(token==null||msg.equals("Wrong readernumber or password")) {
-            token="null";
-            msg = "Lesekartennummer oder Password falsch.";
-        }
-
-        if(!token.equals("null")) {
+        if(!token.equals("null")&&tokenmap.containsKey(readernumber)&&tokenmap.get(readernumber).equals(token)) {
 
             msg = storno_core(token, bookingcode, readernumber);
 
