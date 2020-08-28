@@ -81,15 +81,34 @@ public class WorkloadStats {
 
         Calendar opening = (Calendar)date.clone();
 
-        opening.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[0]));
-        opening.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("from").split(":")[1]));
+        int pos = 0;
+
+        for(int i=0;i<timeslots.get(inst).getJsonArray("interval").size();i++) {
+
+            String day = timeslots.get(inst).getJsonArray("interval").getJsonObject(i).getString("day");
+
+            if(day==null) {
+                if(date.get(Calendar.DAY_OF_WEEK)>=2&&date.get(Calendar.DAY_OF_WEEK)<=6) pos = i;
+            }
+            else if(Integer.parseInt(day)==7) {
+                if(date.get(Calendar.DAY_OF_WEEK)==7) pos = i;
+            }else if(Integer.parseInt(day)==1) {
+                if(date.get(Calendar.DAY_OF_WEEK)==1) pos = i;
+            }
+
+        }
+
+        //System.out.println(timeslots.get(inst).getJsonArray("interval"));
+
+        opening.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(pos).getString("from").split(":")[0]));
+        opening.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(pos).getString("from").split(":")[1]));
         opening.set(Calendar.SECOND, 0);
         opening.set(Calendar.MILLISECOND, 0);
 
         Calendar closing = (Calendar)date.clone();
 
-        closing.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[0]));
-        closing.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(0).getString("until").split(":")[1])+1);
+        closing.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(pos).getString("until").split(":")[0]));
+        closing.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(pos).getString("until").split(":")[1])+1);
         closing.set(Calendar.SECOND, 0);
         closing.set(Calendar.MILLISECOND, 0);
 
