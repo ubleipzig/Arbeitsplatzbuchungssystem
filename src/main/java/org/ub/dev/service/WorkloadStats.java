@@ -98,8 +98,6 @@ public class WorkloadStats {
 
         }
 
-        //System.out.println(timeslots.get(inst).getJsonArray("interval"));
-
         opening.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(pos).getString("from").split(":")[0]));
         opening.set(Calendar.MINUTE, Integer.parseInt(timeslots.get(inst).getJsonArray("interval").getJsonObject(pos).getString("from").split(":")[1]));
         opening.set(Calendar.SECOND, 0);
