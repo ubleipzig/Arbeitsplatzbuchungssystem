@@ -65,8 +65,8 @@ public class BookingService {
     //Cache-Speicher für den workload
     HashMap<String, Object[]> workloaddata = new HashMap<>();
 
-
-    //Zähler für die angemeldeten Nutzer
+    //experimentelle Sonderregelungen
+    ArrayList<SpecialRuleset> rulesets = new ArrayList<>();
 
     public static boolean secured_area = false;
 
@@ -127,8 +127,8 @@ public class BookingService {
         router.route("/booking/mastorno*").handler(BodyHandler.create());
         router.post("/booking/mastorno").handler(this::mastorno);
 
-        router.route("/booking/timeslots*").handler(BodyHandler.create());
-        router.post("/booking/timeslots").blockingHandler(this::modifyTimeslots);
+        router.route("/booking/modifyClosure*").handler(BodyHandler.create());
+        router.post("/booking/modifyClosure").blockingHandler(this::modifyTimeslots);
 
         router.route("/booking/stats*").handler(BodyHandler.create());
         router.get("/booking/stats").handler(this::stats);
@@ -509,6 +509,21 @@ public class BookingService {
             workspace_id = (int)workspace.get("id");
             found_area = (String)workspace.get("area");
             String fittings = (String)workspace.get("fitting");
+
+/*
+            boolean notuseable_sru = false;
+            for(SpecialRuleset sru:rulesets) {
+                if(!sru.getTypeOfRuleset().equals("Platzblockade")) continue;
+                if(cal.after(sru.from)&&cal.before(sru.until))
+                    if(sru.workspaceIDs.contains(workspace_id)) {
+                        System.out.println("workspace not usable!");
+                        notuseable_sru = true;
+                        break;
+                    }
+            }
+            if(notuseable_sru) continue;
+*/
+
 
             boolean notuseable = false;
             if(!fitting.isEmpty()) {
@@ -1601,6 +1616,16 @@ public class BookingService {
         };
 
         workloadsystem.start();
+
+        //experimenteller einsatz der rulesets
+        SpecialRuleset sru = new SpecialRuleset("Platzblockade", "Bibliotheca Albertina");
+        sru.setFrom(Tools.setCalendarOnDate(2,9,2020));
+        sru.setUntil(Tools.setCalendarOnDate(4,9,2020));
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(1);list.add(2);list.add(3);list.add(4);list.add(5);
+        sru.setWorkspaceIDs(list);
+
+        //rulesets.add(sru);
 
     }
 
