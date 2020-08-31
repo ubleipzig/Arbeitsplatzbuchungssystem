@@ -127,6 +127,9 @@ public class BookingService {
         router.route("/booking/mastorno*").handler(BodyHandler.create());
         router.post("/booking/mastorno").handler(this::mastorno);
 
+        router.route("/booking/timeslots*").handler(BodyHandler.create());
+        router.post("/booking/timeslots").blockingHandler(this::modifyTimeslots);
+
         router.route("/booking/stats*").handler(BodyHandler.create());
         router.get("/booking/stats").handler(this::stats);
 
@@ -259,6 +262,13 @@ public class BookingService {
 
         rc.response().headers().add("Content-type","application/json");
         rc.response().end(timeslots.get(institution).encodePrettily());
+
+    }
+
+
+    private void modifyTimeslots(RoutingContext rc) {
+
+        //rc.getBodyAsJson().getJsonObject("")
 
     }
 

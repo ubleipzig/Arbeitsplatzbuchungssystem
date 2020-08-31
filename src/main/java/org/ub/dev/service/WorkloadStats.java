@@ -87,13 +87,47 @@ public class WorkloadStats {
 
             String day = timeslots.get(inst).getJsonArray("interval").getJsonObject(i).getString("day");
 
-            if(day==null) {
-                if(date.get(Calendar.DAY_OF_WEEK)>=2&&date.get(Calendar.DAY_OF_WEEK)<=6) pos = i;
+            if(day==null) day = "0";
+
+            if(Integer.parseInt(day)==2) {
+                if(date.get(Calendar.DAY_OF_WEEK)==2) {
+                    pos = i;
+                    break;
+                }
             }
-            else if(Integer.parseInt(day)==7) {
-                if(date.get(Calendar.DAY_OF_WEEK)==7) pos = i;
+            else if(Integer.parseInt(day)==3) {
+                if(date.get(Calendar.DAY_OF_WEEK)==3) {
+                    pos = i;
+                    break;
+                }
+            }
+            else if(Integer.parseInt(day)==4) {
+                if(date.get(Calendar.DAY_OF_WEEK)==4) {
+                    pos = i;
+                    break;
+                }
+            }else if(Integer.parseInt(day)==5) {
+                if(date.get(Calendar.DAY_OF_WEEK)==5) {
+                    pos = i;
+                    break;
+                }
+            }else if(Integer.parseInt(day)==6) {
+                if(date.get(Calendar.DAY_OF_WEEK)==6) {
+                    pos = i;
+                    break;
+                }
+            }else if(Integer.parseInt(day)==7) {
+                if(date.get(Calendar.DAY_OF_WEEK)==7) {
+                    pos = i;
+                    break;
+                }
             }else if(Integer.parseInt(day)==1) {
-                if(date.get(Calendar.DAY_OF_WEEK)==1) pos = i;
+                if(date.get(Calendar.DAY_OF_WEEK)==1) {
+                    pos = i;
+                    break;
+                }
+            }else if(Integer.parseInt(day)==0) {
+                pos = i;
             }
 
         }
