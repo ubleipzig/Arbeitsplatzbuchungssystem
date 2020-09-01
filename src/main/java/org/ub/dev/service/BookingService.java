@@ -510,19 +510,18 @@ public class BookingService {
             found_area = (String)workspace.get("area");
             String fittings = (String)workspace.get("fitting");
 
-/*
-            boolean notuseable_sru = false;
-            for(SpecialRuleset sru:rulesets) {
-                if(!sru.getTypeOfRuleset().equals("Platzblockade")) continue;
-                if(cal.after(sru.from)&&cal.before(sru.until))
-                    if(sru.workspaceIDs.contains(workspace_id)) {
+
+            boolean notuseable_srs = false;
+            for(SpecialRuleset srs:rulesets) {
+                if(!srs.getTypeOfRuleset().equals("Platzblockade")) continue;
+                if(cal.after(srs.from)&&cal.before(srs.until))
+                    if(srs.workspaceIDs.contains(workspace_id)) {
                         System.out.println("workspace not usable!");
-                        notuseable_sru = true;
+                        notuseable_srs = true;
                         break;
                     }
             }
-            if(notuseable_sru) continue;
-*/
+            if(notuseable_srs) continue;
 
 
             boolean notuseable = false;
@@ -1617,16 +1616,10 @@ public class BookingService {
 
         workloadsystem.start();
 
+
+
         //experimenteller einsatz der rulesets
-        SpecialRuleset sru = new SpecialRuleset("Platzblockade", "Bibliotheca Albertina");
-        sru.setFrom(Tools.setCalendarOnDate(2,9,2020));
-        sru.setUntil(Tools.setCalendarOnDate(4,9,2020));
-        ArrayList<Integer> list = new ArrayList<>();
-        list.add(1);list.add(2);list.add(3);list.add(4);list.add(5);
-        sru.setWorkspaceIDs(list);
-
-        //rulesets.add(sru);
-
+        RulesetLoader rsloader = new RulesetLoader(rulesets);
     }
 
     public static void main(String args[])
