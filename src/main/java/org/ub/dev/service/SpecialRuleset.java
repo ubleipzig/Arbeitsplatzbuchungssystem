@@ -5,13 +5,14 @@ import java.util.Calendar;
 
 public class SpecialRuleset {
 
-    String typeOfRuleset, area, library;
+    String typeOfRuleset, area, library, name;
     Calendar from, until;
     ArrayList<Integer> workspaceIDs;
 
-    public SpecialRuleset(String typeOfRuleset, String library){
+    public SpecialRuleset(String typeOfRuleset, String library, String name){
         this.typeOfRuleset=typeOfRuleset;
         this.library = library;
+        this.name = name;
     }
 
     public String getTypeOfRuleset() {

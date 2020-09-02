@@ -33,10 +33,12 @@ public class RulesetLoader {
                 String from = single.getAttributeValue("from");
                 String until = single.getAttributeValue("until");
 
+                String name = single.getAttributeValue("name");
+
                 String area = single.getChildText("area");
                 String idlist = single.getChildText("workspaceIDs");
 
-                SpecialRuleset srs = new SpecialRuleset(type, library);
+                SpecialRuleset srs = new SpecialRuleset(type, library, name);
                 int day = Integer.parseInt(from.split(" ")[0].split("[.]")[0]);
                 int month = Integer.parseInt(from.split(" ")[0].split("[.]")[1]);
                 int year = Integer.parseInt(from.split(" ")[0].split("[.]")[2]);

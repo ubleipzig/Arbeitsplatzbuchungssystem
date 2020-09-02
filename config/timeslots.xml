@@ -56,5 +56,8 @@
         <interval from="08:00" until="22:00"/>
         <interval from="10:00" until="22:00" day="7"/>
         <interval from="10:00" until="20:00" day="1"/>
+        <specialClosureDays>
+            02.09.2020
+        </specialClosureDays>
     </institution>
 </institutions>
