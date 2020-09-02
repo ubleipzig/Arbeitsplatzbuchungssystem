@@ -130,6 +130,8 @@ public class BookingService {
 
         router.route("/booking/modifyClosure*").handler(BodyHandler.create());
         router.post("/booking/modifyClosure").blockingHandler(this::modifyTimeslots);
+        router.route("/booking/rulesets*").handler(BodyHandler.create());
+        router.post("/booking/rulesets").blockingHandler(this::rulesets);
 
         router.route("/booking/stats*").handler(BodyHandler.create());
         router.get("/booking/stats").handler(this::stats);
@@ -266,6 +268,20 @@ public class BookingService {
 
     }
 
+    private void rulesets(RoutingContext rc) {
+
+        JsonObject json = new JsonObject();
+        JsonArray array = new JsonArray();
+
+        for(SpecialRuleset srs:rulesets) {
+            array.add(srs.name);
+        }
+
+        json.put("SpecialRulesets",array);
+
+        rc.response().headers().add("Content-type","application/json");
+        rc.response().end(json.encodePrettily());
+    }
 
     private void modifyTimeslots(RoutingContext rc) {
 
@@ -1622,8 +1638,6 @@ public class BookingService {
         };
 
         workloadsystem.start();
-
-
 
         //experimenteller einsatz der rulesets
         RulesetLoader rsloader = new RulesetLoader(rulesets);
