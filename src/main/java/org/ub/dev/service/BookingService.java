@@ -40,6 +40,7 @@ public class BookingService {
 
     //Hashmap zur relationalen Speicherung von LKN und Libero-Token
     HashMap<String, String> tokenmap = new HashMap<>();
+    HashMap<String, String> tokenmap_storno = new HashMap<>();
 
     //Hashmap zur Speicherung von LKN und Anmeldezeitpunkt
     HashMap<String, Long> tokentimes = new HashMap<>();
@@ -1350,7 +1351,7 @@ public class BookingService {
 
         String msg = "";
 
-        if(!token.equals("null")&&tokenmap.containsKey(readernumber)&&tokenmap.get(readernumber).equals(token)) {
+        if(!token.equals("null")&&tokenmap_storno.containsKey(readernumber)&&tokenmap_storno.get(readernumber).equals(token)) {
 
             msg = storno_core(token, bookingcode, readernumber);
 
@@ -1436,6 +1437,7 @@ public class BookingService {
 
         String readernumber = rc.request().formAttributes().get("readernumber");
         String password = rc.request().formAttributes().get("password");
+        String logintype = rc.request().formAttributes().get("logintype");
 
         //Zugriff auf Libero-Manager, ermittle Token für das Login mit gewählter LKN und Passwort
 
@@ -1454,8 +1456,13 @@ public class BookingService {
 
             //add relation readernumber <-> token to the map
 
-            tokenmap.put(readernumber, token);
-            tokentimes.put(readernumber, System.currentTimeMillis());
+            if(logintype.equals("0")) {
+                tokenmap.put(readernumber, token);
+                tokentimes.put(readernumber, System.currentTimeMillis());
+            }
+            else if(logintype.equals("1")) {
+                tokenmap_storno.put(readernumber, token);
+            }
 
             //prüfe auf existenz des nutzers in der DB und lege diesen ggf. an
             SQLHub hub = new SQLHub(p);
