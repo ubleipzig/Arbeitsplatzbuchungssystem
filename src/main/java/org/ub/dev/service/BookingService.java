@@ -99,34 +99,34 @@ public class BookingService {
         router.route("/booking/login*").handler(BodyHandler.create());
         router.post("/booking/login").blockingHandler(this::login);
         router.route("/booking/logout*").handler(BodyHandler.create());
-        router.post("/booking/logout").handler(this::logout);
+        router.post("/booking/logout").blockingHandler(this::logout);
         router.route("/booking/booking*").handler(BodyHandler.create());
         router.post("/booking/booking").blockingHandler(this::booking, true);
         router.route("/booking/areas*").handler(BodyHandler.create());
-        router.get("/booking/areas").handler(this::areas);
+        router.get("/booking/areas").blockingHandler(this::areas);
         router.route("/booking/timeslots*").handler(BodyHandler.create());
-        router.get("/booking/timeslots").handler(this::timeslots);
+        router.get("/booking/timeslots").blockingHandler(this::timeslots);
         router.route("/booking/institutions*").handler(BodyHandler.create());
-        router.get("/booking/institutions").handler(this::institutions);
+        router.get("/booking/institutions").blockingHandler(this::institutions);
         router.route("/booking/storno*").handler(BodyHandler.create());
         router.post("/booking/storno").blockingHandler(this::storno);
         router.route("/booking/checkdate*").handler(BodyHandler.create());
-        router.post("/booking/checkdate").handler(this::checkdate);
+        router.post("/booking/checkdate").blockingHandler(this::checkdate);
         router.route("/booking/counter*").handler(BodyHandler.create());
-        router.get("/booking/counter").handler(this::counter);
+        router.get("/booking/counter").blockingHandler(this::counter);
         router.route("/booking/workload*").handler(BodyHandler.create());
         router.get("/booking/workload").blockingHandler(this::workload);
 
         router.route("/booking/malogin*").handler(BodyHandler.create());
-        router.post("/booking/malogin").handler(this::malogin);
+        router.post("/booking/malogin").blockingHandler(this::malogin);
         router.route("/booking/malogout*").handler(BodyHandler.create());
-        router.post("/booking/malogout").handler(this::malogout);
+        router.post("/booking/malogout").blockingHandler(this::malogout);
         router.route("/booking/check*").handler(BodyHandler.create());
-        router.post("/booking/check").handler(this::checkReservation);
+        router.post("/booking/check").blockingHandler(this::checkReservation);
         router.route("/booking/plan*").handler(BodyHandler.create());
-        router.post("/booking/plan").handler(this::plan);
+        router.post("/booking/plan").blockingHandler(this::plan);
         router.route("/booking/mastorno*").handler(BodyHandler.create());
-        router.post("/booking/mastorno").handler(this::mastorno);
+        router.post("/booking/mastorno").blockingHandler(this::mastorno);
 
         router.route("/booking/modifyClosure*").handler(BodyHandler.create());
         router.post("/booking/modifyClosure").blockingHandler(this::modifyTimeslots);
@@ -134,7 +134,7 @@ public class BookingService {
         router.post("/booking/rulesets").blockingHandler(this::rulesets);
 
         router.route("/booking/stats*").handler(BodyHandler.create());
-        router.get("/booking/stats").handler(this::stats);
+        router.get("/booking/stats").blockingHandler(this::stats);
 
         router.route("/booking/admin*").handler(BodyHandler.create());
         router.post("/booking/admin").blockingHandler(this::admin);
@@ -1175,7 +1175,7 @@ public class BookingService {
         JsonObject jso = new JsonObject();
 
 
-        if(!tokenmap.containsKey(readernumber)|!tokenmap.get(readernumber).equals(token))
+        if(!tokenmap_storno.containsKey(readernumber)|!tokenmap_storno.get(readernumber).equals(token))
         {
             msg = "Sie sind nicht eingeloggt!";
 
@@ -1230,7 +1230,7 @@ public class BookingService {
         String token = rc.getBodyAsJson().getString("token");
         String readernumber = rc.getBodyAsJson().getString("readernumber");
 
-        if(!tokenmap.containsValue(token)) {
+        if(!tokenmap_storno.containsValue(token)) {
             rc.response().end();
             return;
         }
