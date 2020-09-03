@@ -369,6 +369,15 @@ public class BookingService {
         cal_today.set(Calendar.SECOND, 59);
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
+        for(SpecialRuleset srs:rulesets) {
+            if (!srs.getTypeOfRuleset().equals("Bibliotheksschließung")) continue;
+            if(cal.after(srs.from)&&cal.before(srs.until)&&srs.library.equals(institution)) {
+                bookingArray[1] = "";
+                bookingArray[3] = "lib_closed";
+                return bookingArray;
+            }
+        }
+
         //** Klassische Archäologie Schließung : START
 
         if(institution.contains("Archäologie")) {
