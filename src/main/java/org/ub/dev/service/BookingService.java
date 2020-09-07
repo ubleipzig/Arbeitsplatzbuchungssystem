@@ -373,7 +373,7 @@ public class BookingService {
             if (!srs.getTypeOfRuleset().equals("Bibliotheksschließung")) continue;
             if(cal.after(srs.from)&&cal.before(srs.until)&&srs.library.equals(institution)) {
                 bookingArray[1] = "";
-                bookingArray[3] = "lib_closed";
+                bookingArray[3] = "info#"+srs.info;
                 return bookingArray;
             }
         }
@@ -540,6 +540,7 @@ public class BookingService {
             boolean notuseable_srs = false;
             for(SpecialRuleset srs:rulesets) {
                 if(!srs.getTypeOfRuleset().equals("Platzblockade")) continue;
+                if(!srs.library.equals(institution)) continue;
                 if(cal.after(srs.from)&&cal.before(srs.until))
                     if(srs.workspaceIDs.contains(workspace_id)) {
                         System.out.println("workspace not usable!");

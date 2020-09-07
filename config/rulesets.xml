@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <rulesets>
-    <ruleset name="Test1" type="Platzblockade" library="Bibliotheca Albertina" from="02.09.2020 00:00:00" until="04.09.2020 00:00:00">
+    <ruleset name="Rewi-Schließung" type="Bibliotheksschließung" library="Bibliothek Rechtswissenschaft" from="14.09.2020 00:00:00" until="27.09.2020 23:45:00">
         <area></area>
-        <workspaceIDs>309,310,311,312,313,314,315,316,319</workspaceIDs>
+        <workspaceIDs></workspaceIDs>
+        <info>Die Bibliothek ist vom 14.09.2020 bis 27.09.2020 geschlossen!</info>
     </ruleset>
 </rulesets>

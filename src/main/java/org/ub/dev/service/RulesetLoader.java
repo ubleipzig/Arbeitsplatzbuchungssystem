@@ -37,6 +37,7 @@ public class RulesetLoader {
 
                 String area = single.getChildText("area");
                 String idlist = single.getChildText("workspaceIDs");
+                String info = single.getChildText("info");
 
                 SpecialRuleset srs = new SpecialRuleset(type, library, name);
                 int day = Integer.parseInt(from.split(" ")[0].split("[.]")[0]);
@@ -57,14 +58,16 @@ public class RulesetLoader {
 
                 srs.setUntil(Tools.setCalendarOnComplete(day, month, year, hour, minute));
                 srs.setArea(area);
+                srs.setInfo(info);
 
-                ArrayList<Integer> ids = new ArrayList<>();
-                for(String item:idlist.split(",")) {
-                    ids.add(Integer.parseInt(item));
+                if(idlist!=null&&!idlist.isEmpty()) {
+                    ArrayList<Integer> ids = new ArrayList<>();
+                    for (String item : idlist.split(",")) {
+                        ids.add(Integer.parseInt(item));
+                    }
+
+                    srs.setWorkspaceIDs(ids);
                 }
-
-                srs.setWorkspaceIDs(ids);
-
                 rsrlist.add(srs);
 
             }
