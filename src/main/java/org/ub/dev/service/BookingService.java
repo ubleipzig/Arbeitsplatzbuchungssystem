@@ -378,60 +378,6 @@ public class BookingService {
             }
         }
 
-        //** Klassische Archäologie Schließung : START
-
-        if(institution.contains("Archäologie")) {
-
-            Calendar cal_blocked1 = Calendar.getInstance();
-            cal_blocked1.set(Calendar.HOUR_OF_DAY, 0);
-            cal_blocked1.set(Calendar.MINUTE, 0);
-            cal_blocked1.set(Calendar.SECOND, 0);
-            cal_blocked1.set(Calendar.DAY_OF_MONTH, 3);
-            cal_blocked1.set(Calendar.MONTH, Calendar.AUGUST);
-            cal_blocked1.set(Calendar.YEAR, 2020);
-
-            Calendar cal_blocked2 = Calendar.getInstance();
-            cal_blocked2.set(Calendar.HOUR_OF_DAY, 0);
-            cal_blocked2.set(Calendar.MINUTE, 0);
-            cal_blocked2.set(Calendar.SECOND, 0);
-            cal_blocked2.set(Calendar.DAY_OF_MONTH, 14);
-            cal_blocked2.set(Calendar.MONTH, Calendar.AUGUST);
-            cal_blocked2.set(Calendar.YEAR, 2020);
-
-            if (cal.getTimeInMillis() >= cal_blocked1.getTimeInMillis() && cal.getTimeInMillis() <= cal_blocked2.getTimeInMillis() && area.contains("Ur-Frühgeschichte")) {
-                bookingArray[1] = "";
-                bookingArray[3] = "notbookable2";
-                return bookingArray;
-            }
-
-            if (cal.getTimeInMillis() >= cal_blocked1.getTimeInMillis() && cal.getTimeInMillis() <= cal_blocked2.getTimeInMillis() && !area.contains("Ur-Frühgeschichte")) {
-                special_query = true;
-            }
-
-        }
-        //** Klassische Archäologie Schließung : ENDE
-
-        //** BA Bauarbeiten : START
-
-        if(institution.contains("Bibliotheca Albertina")) {
-            Calendar c1 = Tools.setCalendarOnDate(24, 8, 2020);
-            Calendar c2 = Tools.setCalendarOnDate(4, 9, 2020);
-
-            if(cal.getTimeInMillis() >= c1.getTimeInMillis() && cal.getTimeInMillis() <= c2.getTimeInMillis())
-            {
-                if(area.contains("Ost 1. OG")) {
-                    bookingArray[1] = "";
-                    bookingArray[3] = "notbookable4";
-                    return bookingArray;
-                }
-
-                special_query1 = true;
-            }
-        }
-
-         //** BA Bauarbeiten : ENDE
-
-
         //** Veterinärmedizin : START
 
         if(institution.contains("Veterinärmedizin")) {
@@ -948,7 +894,7 @@ public class BookingService {
         int tslot = Integer.parseInt(rc.request().formAttributes().get("tslot"));
         int preference = Integer.parseInt(rc.request().formAttributes().get("preference"));
 
-        if(!tokenmap.get(readernumber).equals(token)) {
+        if(!tokenmapma.containsValue(token)&&!tokenmap.get(readernumber).equals(token)) {
             JsonObject json = new JsonObject();
             json.put("message", "sessionerror");
             rc.response().end(json.encodePrettily());
