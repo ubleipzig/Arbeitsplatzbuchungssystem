@@ -30,15 +30,8 @@ public class SQLHub {
         String db_passwd = p.getProperty("database_password");
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        try {
             Connection connect_digilife = DriverManager.getConnection(
-                    "jdbc:mysql://localhost/" + database + "?user=" + db_user + "&password=" + db_passwd);
+                    "jdbc:mariadb://localhost/" + database + "?user=" + db_user + "&password=" + db_passwd);
             Statement statement_digilife = connect_digilife.createStatement();
             ResultSet rs = statement_digilife.executeQuery(sqlrequest);
             if (rs.next()) {
@@ -62,15 +55,8 @@ public class SQLHub {
         String db_passwd = p.getProperty("database_password");
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        try {
             Connection connect_digilife = DriverManager.getConnection(
-                    "jdbc:mysql://localhost/" + database + "?user=" + db_user + "&password=" + db_passwd);
+                    "jdbc:mariadb://localhost/" + database + "?user=" + db_user + "&password=" + db_passwd);
             Statement statement_digilife = connect_digilife.createStatement();
             statement_digilife.execute(sqlrequest);
             statement_digilife.close();
@@ -89,15 +75,8 @@ public class SQLHub {
         String db_passwd = p.getProperty("database_password");
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        try {
             Connection connect_digilife = DriverManager.getConnection(
-                    "jdbc:mysql://localhost/" + database + "?user=" + db_user + "&password=" + db_passwd);
+                    "jdbc:mariadb://localhost/" + database + "?user=" + db_user + "&password=" + db_passwd);
             Statement statement_digilife = connect_digilife.createStatement();
             ResultSet rs = statement_digilife.executeQuery(sqlrequest);
             while (rs.next()) {
