@@ -270,17 +270,75 @@ public class BookingService {
 
     private void rulesets(RoutingContext rc) {
 
-        JsonObject json = new JsonObject();
-        JsonArray array = new JsonArray();
+        if(rc.request().getFormAttribute("rulesetname").isEmpty()) {
 
-        for(SpecialRuleset srs:rulesets) {
-            array.add(srs.name);
+            JsonObject json = new JsonObject();
+            JsonArray array = new JsonArray();
+
+            for (SpecialRuleset srs : rulesets) {
+                array.add(srs.name);
+            }
+
+            json.put("SpecialRulesets", array);
+
+            rc.response().headers().add("Content-type", "application/json");
+            rc.response().end(json.encodePrettily());
+
+        }else{
+
+            String rulesetname = rc.request().getFormAttribute("rulesetname");
+            String rulesettype = rc.request().getFormAttribute("rulesettype");
+            String rulesetstartdate = rc.request().getFormAttribute("startdate");
+            String rulesetstarttime = rc.request().getFormAttribute("starttime");
+            String rulesetenddate = rc.request().getFormAttribute("enddate");
+            String rulesetendtime = rc.request().getFormAttribute("endtime");
+            String rulesetopening = rc.request().getFormAttribute("opening");
+            String rulesetclosing = rc.request().getFormAttribute("closing");
+            String rulesetarea = rc.request().getFormAttribute("area");
+            String rulesetworkspaceids = rc.request().getFormAttribute("workspaceids");
+            String rulesetinfotext = rc.request().getFormAttribute("infotext");
+            String rulesetinsitutions = rc.request().getFormAttribute("institutions");
+            String rulesetisnew = rc.request().getFormAttribute("isnewrule");
+
+            //rulesetstartdate = 2020-09-18
+            //rulesetstarttime = 00:00
+
+            switch (rulesettype) {
+                case "1": rulesettype = "Bibliotheksschließung"; break;
+                case "2": rulesettype = "Platzblockade"; break;
+                case "3": rulesettype = "Bereichschließung"; break;
+                case "4": rulesettype = "Öffnungszeitenänderung"; break;
+            }
+
+            SpecialRuleset srs = new SpecialRuleset(rulesettype, rulesetinsitutions, rulesetname);
+            srs.setInfo(rulesetinfotext);
+            srs.setArea(rulesetarea);
+
+            int day = Integer.parseInt(rulesetstartdate.split("-")[2]);
+            int month = Integer.parseInt(rulesetstartdate.split("-")[1]);
+            int year = Integer.parseInt(rulesetstartdate.split("-")[0]);
+            int hour = Integer.parseInt(rulesetstarttime.split(":")[0]);
+            int minute = Integer.parseInt(rulesetstarttime.split(":")[1]);
+
+            srs.setFrom(Tools.setCalendarOnComplete(day, month, year, hour, minute));
+
+            day = Integer.parseInt(rulesetenddate.split("-")[2]);
+            month = Integer.parseInt(rulesetenddate.split("-")[1]);
+            year = Integer.parseInt(rulesetenddate.split("-")[0]);
+            hour = Integer.parseInt(rulesetendtime.split(":")[0]);
+            minute = Integer.parseInt(rulesetendtime.split(":")[1]);
+
+            srs.setUntil(Tools.setCalendarOnComplete(day, month, year, hour, minute));
+
+            ArrayList<Integer> idlist = new ArrayList<>();
+            for(String id:rulesetworkspaceids.split(",")) {
+                idlist.add(Integer.parseInt(id));
+            }
+
+            srs.setWorkspaceIDs(idlist);
+
+            rc.response().end();
         }
-
-        json.put("SpecialRulesets",array);
-
-        rc.response().headers().add("Content-type","application/json");
-        rc.response().end(json.encodePrettily());
     }
 
     private void modifyTimeslots(RoutingContext rc) {
