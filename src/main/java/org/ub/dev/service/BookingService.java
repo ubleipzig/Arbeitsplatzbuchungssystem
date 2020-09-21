@@ -95,13 +95,23 @@ public class BookingService {
             }
         });
 
+        Router router2 = Router.router(vertx);
+        vertx.createHttpServer().requestHandler(router2).listen(12106, result -> {
+            if (result.succeeded()) {
+                Promise.promise().complete();
+            } else {
+                Promise.promise().fail(result.cause());
+            }
+        });
+
         router.route().handler(CorsHandler.create(".*."));
+        router2.route().handler(CorsHandler.create(".*."));
         router.route("/booking/login*").handler(BodyHandler.create());
         router.post("/booking/login").blockingHandler(this::login);
         router.route("/booking/logout*").handler(BodyHandler.create());
         router.post("/booking/logout").blockingHandler(this::logout);
-        router.route("/booking/booking*").handler(BodyHandler.create());
-        router.post("/booking/booking").blockingHandler(this::booking, true);
+        router2.route("/booking/booking*").handler(BodyHandler.create());
+        router2.post("/booking/booking").blockingHandler(this::booking, true);
         router.route("/booking/areas*").handler(BodyHandler.create());
         router.get("/booking/areas").blockingHandler(this::areas);
         router.route("/booking/timeslots*").handler(BodyHandler.create());
