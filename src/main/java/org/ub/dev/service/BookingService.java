@@ -1453,7 +1453,11 @@ public class BookingService {
 
         call_stats[7]++;
 
-        if(new File("maintanance").exists()) {
+        String readernumber = rc.request().formAttributes().get("readernumber");
+
+        String su = p.getProperty("superuser", "");
+
+        if(new File("maintanance").exists()&&(!readernumber.equals(su)||su.isBlank())) {
             JsonObject answer_object = new JsonObject();
             answer_object.put("token", "null");
             answer_object.put("msg", "System befindet sich im Wartungsmodes. Anmeldungen sind zur Zeit nicht möglich.");
@@ -1477,7 +1481,6 @@ public class BookingService {
             return;
         }
 
-        String readernumber = rc.request().formAttributes().get("readernumber");
         String password = rc.request().formAttributes().get("password");
         String logintype = rc.request().formAttributes().get("logintype");
 
