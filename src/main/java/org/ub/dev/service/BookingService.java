@@ -297,7 +297,7 @@ public class BookingService {
             String rulesetarea = rc.request().getFormAttribute("area");
             String rulesetworkspaceids = rc.request().getFormAttribute("workspaceids");
             String rulesetinfotext = rc.request().getFormAttribute("infotext");
-            String rulesetinsitutions = rc.request().getFormAttribute("institutions");
+            String rulesetinstitutions = rc.request().getFormAttribute("institutions");
             String rulesetisnew = rc.request().getFormAttribute("isnewrule");
 
             //rulesetstartdate = 2020-09-18
@@ -310,7 +310,7 @@ public class BookingService {
                 case "4": rulesettype = "Öffnungszeitenänderung"; break;
             }
 
-            SpecialRuleset srs = new SpecialRuleset(rulesettype, rulesetinsitutions, rulesetname);
+            SpecialRuleset srs = new SpecialRuleset(rulesettype, rulesetinstitutions, rulesetname);
             srs.setInfo(rulesetinfotext);
             srs.setArea(rulesetarea);
 
@@ -330,14 +330,16 @@ public class BookingService {
 
             srs.setUntil(Tools.setCalendarOnComplete(day, month, year, hour, minute));
 
-            ArrayList<Integer> idlist = new ArrayList<>();
-            for(String id:rulesetworkspaceids.split(",")) {
-                idlist.add(Integer.parseInt(id));
+            if(rulesetworkspaceids!=null&&!rulesetworkspaceids.isEmpty()) {
+                ArrayList<Integer> idlist = new ArrayList<>();
+                for (String id : rulesetworkspaceids.split(",")) {
+                    idlist.add(Integer.parseInt(id));
+                }
+
+                srs.setWorkspaceIDs(idlist);
             }
 
-            srs.setWorkspaceIDs(idlist);
-
-            rc.response().end();
+            rc.response().setStatusCode(200).end();
         }
     }
 
