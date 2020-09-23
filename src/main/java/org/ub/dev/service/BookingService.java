@@ -349,6 +349,10 @@ public class BookingService {
                 srs.setWorkspaceIDs(idlist);
             }
 
+            rulesets.add(srs);
+
+            RulesetLoader.toFile(rulesets);
+
             rc.response().setStatusCode(200).end();
         }
     }

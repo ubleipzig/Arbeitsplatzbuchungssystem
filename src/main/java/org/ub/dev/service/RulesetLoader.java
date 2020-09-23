@@ -4,9 +4,12 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 import org.ub.dev.tools.Tools;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,6 +21,48 @@ public class RulesetLoader {
     public RulesetLoader(ArrayList<SpecialRuleset> rulesets) {
         rsrlist = rulesets;
         init();
+    }
+
+    public static void toFile(ArrayList<SpecialRuleset> rulesets) {
+
+        Document doc = new Document();
+        Element xml_rulesets = new Element("rulesets");
+        doc.setRootElement(xml_rulesets);
+
+        for(SpecialRuleset srs:rulesets) {
+            String type = srs.typeOfRuleset;
+            String library = srs.library;
+            String name = srs.name;
+
+            String from = Tools.getStringFromCal(srs.from);
+            String until = Tools.getStringFromCal(srs.until);
+            String area = srs.area;
+            String idlist = new String();
+
+            for(int id:srs.workspaceIDs) {
+                    idlist+=""+id+",";
+            }
+            idlist = idlist.substring(0, idlist.length()-1);
+            String info = srs.info;
+
+            Element ruleset = new Element("ruleset");
+            ruleset.setAttribute("name", name);
+            ruleset.setAttribute("type", type);
+            ruleset.setAttribute("library", library);
+            ruleset.setAttribute("from", from);
+            ruleset.setAttribute("until", until);
+            ruleset.addContent(new Element("area").setText(area));
+            ruleset.addContent(new Element("workspaceIDs").setText(idlist));
+            ruleset.addContent(new Element("info").setText(info));
+
+            xml_rulesets.addContent(ruleset);
+        }
+
+        try {
+            new XMLOutputter(Format.getPrettyFormat()).output(doc, new FileOutputStream("config/rulesets_test.xml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void init() {
