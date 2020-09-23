@@ -11,6 +11,9 @@ import org.ub.dev.tools.Tools;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -21,6 +24,17 @@ public class RulesetLoader {
     public RulesetLoader(ArrayList<SpecialRuleset> rulesets) {
         rsrlist = rulesets;
         init();
+    }
+
+    public static Object preventNull(Object s) {
+
+
+        if(s.getClass().getName().equals("java.lang.String")) {
+            String xs = (String)s;
+            if(xs==null) return "";
+        }
+
+        return s;
     }
 
     public static void toFile(ArrayList<SpecialRuleset> rulesets) {
@@ -36,14 +50,20 @@ public class RulesetLoader {
 
             String from = Tools.getStringFromCal(srs.from);
             String until = Tools.getStringFromCal(srs.until);
-            String area = srs.area;
+            String area = (String)preventNull(srs.area);
             String idlist = new String();
 
-            for(int id:srs.workspaceIDs) {
-                    idlist+=""+id+",";
+            if(srs.workspaceIDs==null) idlist="";
+            else {
+
+                for (int id : srs.workspaceIDs) {
+                    idlist += "" + id + ",";
+                }
+                if (!idlist.isEmpty())
+                    idlist = idlist.substring(0, idlist.length() - 1);
             }
-            idlist = idlist.substring(0, idlist.length()-1);
-            String info = srs.info;
+
+            String info = (String)preventNull(srs.info);
 
             Element ruleset = new Element("ruleset");
             ruleset.setAttribute("name", name);
@@ -59,7 +79,8 @@ public class RulesetLoader {
         }
 
         try {
-            new XMLOutputter(Format.getPrettyFormat()).output(doc, new FileOutputStream("config/rulesets_test.xml"));
+            if(new File("config/rulesets.xml").exists()) Files.copy(Paths.get("config/rulesets.xml"), Paths.get("config/rulesets_"+System.currentTimeMillis()+".bkp"));
+            new XMLOutputter(Format.getPrettyFormat()).output(doc, new FileOutputStream("config/rulesets.xml"));
         } catch (IOException e) {
             e.printStackTrace();
         }

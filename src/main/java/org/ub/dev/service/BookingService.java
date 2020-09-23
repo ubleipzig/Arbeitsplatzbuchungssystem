@@ -430,7 +430,8 @@ public class BookingService {
         //bookingcode, workspaceid, emailadress
         String bookingArray[] = {"","","","",""}; //UUID, workspaceId, email, msg, bookingtimes
 
-        boolean special_query = false, special_query1 = false;
+        boolean need2use_areaquery = false;
+        String special_areaquery = "";
 
         //convert day|month|year|hour|minute to Timestamp
         Calendar cal = Calendar.getInstance();
@@ -444,11 +445,21 @@ public class BookingService {
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
         for(SpecialRuleset srs:rulesets) {
-            if (!srs.getTypeOfRuleset().equals("Bibliotheksschließung")) continue;
-            if(cal.after(srs.from)&&cal.before(srs.until)&&srs.library.equals(institution)) {
-                bookingArray[1] = "";
-                bookingArray[3] = "info#"+srs.info;
-                return bookingArray;
+            //if (!srs.getTypeOfRuleset().equals("Bibliotheksschließung")&&!srs.getTypeOfRuleset().equals("Bereichsschließung")) continue;
+            if(!srs.library.equals(institution)) continue;
+            if(cal.after(srs.from)&&cal.before(srs.until)) {
+
+                if(srs.getTypeOfRuleset().equals("Bibliotheksschließung")||(srs.getTypeOfRuleset().equals("Bereichsschließung")&&srs.area.equals(area))) {
+                    bookingArray[1] = "";
+                    bookingArray[3] = "info#" + srs.info;
+                    return bookingArray;
+                }
+
+                if(srs.getTypeOfRuleset().equals("Bereichsschließung")&&!srs.area.equals(area))
+                {
+                    need2use_areaquery = true;
+                    special_areaquery += " and area not like '"+srs.area+"'";
+                }
             }
         }
 
@@ -539,8 +550,14 @@ public class BookingService {
         //semaphore
         secured_area = true;
 
+        /*
         if(special_query) area_query = "and area = 'Archäologie'";
         if(special_query1) area_query+= " and area not like 'Ost 1. OG'";
+         */
+
+        if(need2use_areaquery) area_query+=special_areaquery;
+
+        System.out.println(area_query);
 
         SQLHub hub = new SQLHub(p);
         result = hub.getMultiData("select id, area, fitting from workspace where institution = '"+institution.trim()+"' "+area_query, "bookingservice");
