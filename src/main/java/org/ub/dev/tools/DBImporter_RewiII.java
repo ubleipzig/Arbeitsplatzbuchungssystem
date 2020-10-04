@@ -31,7 +31,7 @@ public class DBImporter_RewiII {
         String data = "";
 
         try {
-            FileInputStream fis = new FileInputStream("c:\\Users\\Stefan Freitag\\Desktop\\rewi2bearbeitet.csv");
+            FileInputStream fis = new FileInputStream("rewi2bearbeitet.csv");
             byte buffer[] = fis.readAllBytes();
             fis.close();
 

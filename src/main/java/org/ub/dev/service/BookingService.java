@@ -473,21 +473,23 @@ public class BookingService {
             //vcal zeigt nun auf das Buchungsende
 
             //datumsgrenzwert erstellen
-            Calendar limit = Calendar.getInstance();
-            limit.set(Calendar.HOUR_OF_DAY, 0);
-            limit.set(Calendar.MINUTE, 0);
-            limit.set(Calendar.SECOND, 0);
-            limit.set(Calendar.DAY_OF_MONTH, 3);
-            limit.set(Calendar.MONTH, Calendar.AUGUST);
-            limit.set(Calendar.YEAR, 2020);
+            Calendar limit_before = Calendar.getInstance();
+            limit_before.set(Calendar.HOUR_OF_DAY, 0);
+            limit_before.set(Calendar.MINUTE, 0);
+            limit_before.set(Calendar.SECOND, 0);
+            limit_before.set(Calendar.DAY_OF_MONTH, 3);
+            limit_before.set(Calendar.MONTH, Calendar.AUGUST);
+            limit_before.set(Calendar.YEAR, 2020);
 
-            if(cal.after(limit)) {
+            Calendar limit_after = Tools.setCalendarOnDate(12, 10, 2020);
 
-               limit = (Calendar)vcal.clone();
-               limit.set(Calendar.HOUR_OF_DAY, 16);
-               limit.set(Calendar.MINUTE, 1);
+            if(cal.after(limit_before)&&cal.before(limit_after)) {
 
-                if (vcal.after(limit)) {
+               limit_before = (Calendar)vcal.clone();
+               limit_before.set(Calendar.HOUR_OF_DAY, 16);
+               limit_before.set(Calendar.MINUTE, 1);
+
+                if (vcal.after(limit_before)) {
                     bookingArray[1] = "";
                     bookingArray[3] = "notbookable3";
                     return bookingArray;
