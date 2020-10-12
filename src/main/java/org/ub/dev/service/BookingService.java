@@ -359,7 +359,27 @@ public class BookingService {
 
     private void modifyTimeslots(RoutingContext rc) {
 
-        //rc.getBodyAsJson().getJsonObject("")
+        String scd = rc.request().getFormAttribute("data_scd");
+        String token = rc.request().getFormAttribute("token");
+        String username = rc.request().getFormAttribute("username");
+        String institution = rc.request().getFormAttribute("institutions");
+
+        if((!tokenmapma.get(username).equals(token))||(institution.isEmpty())) {
+            rc.response().end();
+            return;
+        }
+
+        scd = scd.replaceAll(" ","").trim();
+
+        //scd.matches("([01][0-9]):[0-5][0-9]")
+
+        JsonObject json = (JsonObject)timeslots.get(institution);
+
+        json.put("specclosuredays",scd);
+
+        Tools.JSONHashMaptoXML(timeslots);
+
+        rc.response().end("OK");
 
     }
 
