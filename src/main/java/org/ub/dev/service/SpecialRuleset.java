@@ -8,6 +8,7 @@ public class SpecialRuleset {
     String typeOfRuleset, area, library, name, info;
     Calendar from, until;
     ArrayList<Integer> workspaceIDs;
+    String day, opening, closing;
 
     public SpecialRuleset(String typeOfRuleset, String library, String name){
         this.typeOfRuleset=typeOfRuleset;
@@ -53,6 +54,12 @@ public class SpecialRuleset {
 
     public void setWorkspaceIDs(ArrayList<Integer> wIDs) {
         this.workspaceIDs = wIDs;
+    }
+
+    public void setClosingModification(String day, String opening, String closing) {
+        this.day = day;
+        this.opening = opening;
+        this.closing = closing;
     }
 
 }

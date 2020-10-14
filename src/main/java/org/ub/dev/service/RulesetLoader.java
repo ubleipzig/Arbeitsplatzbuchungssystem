@@ -106,6 +106,19 @@ public class RulesetLoader {
                 String info = single.getChildText("info");
 
                 SpecialRuleset srs = new SpecialRuleset(type, library, name);
+
+                if(single.getChild("closuremodification")!=null) {
+
+                    String oc_day = single.getChild("closuremodification").getAttributeValue("day");
+
+                    String opening = single.getChild("closuremodification").getAttributeValue("opening");
+                    String closing = single.getChild("closuremodification").getAttributeValue("closing");
+
+                    srs.setClosingModification(oc_day, opening, closing);
+
+                }
+
+
                 int day = Integer.parseInt(from.split(" ")[0].split("[.]")[0]);
                 int month = Integer.parseInt(from.split(" ")[0].split("[.]")[1]);
                 int year = Integer.parseInt(from.split(" ")[0].split("[.]")[2]);

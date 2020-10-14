@@ -465,7 +465,6 @@ public class BookingService {
         cal_today.add(Calendar.DAY_OF_MONTH,7);
 
         for(SpecialRuleset srs:rulesets) {
-            //if (!srs.getTypeOfRuleset().equals("Bibliotheksschließung")&&!srs.getTypeOfRuleset().equals("Bereichsschließung")) continue;
             if(!srs.library.equals(institution)) continue;
             if(cal.after(srs.from)&&cal.before(srs.until)) {
 
@@ -480,43 +479,51 @@ public class BookingService {
                     need2use_areaquery = true;
                     special_areaquery += " and area not like '"+srs.area+"'";
                 }
-            }
-        }
 
-        //** Veterinärmedizin : START
+                if(srs.getTypeOfRuleset().equals("Öffnungszeitenänderung")) {
 
-        if(institution.contains("Veterinärmedizin")) {
+                    System.out.println("ÖZ");
+                    Calendar ocal = null,ccal = null, vcal = (Calendar)cal.clone();
+                    if(srs.opening!=null&&!srs.opening.isEmpty()) {
+                        ocal = (Calendar)cal.clone();
 
-            Calendar vcal = (Calendar)cal.clone();
-            vcal.add(Calendar.MINUTE, Integer.parseInt(duration));
+                        int dow = ocal.get(Calendar.DAY_OF_WEEK);
 
-            //vcal zeigt nun auf das Buchungsende
+                        if((srs.day!=null&&!srs.day.isEmpty())&&srs.day!=(""+dow)) continue;
+                        if((srs.day==null||srs.day.isEmpty())&&!(dow>=2&&dow<=6)) continue;
 
-            //datumsgrenzwert erstellen
-            Calendar limit_before = Calendar.getInstance();
-            limit_before.set(Calendar.HOUR_OF_DAY, 0);
-            limit_before.set(Calendar.MINUTE, 0);
-            limit_before.set(Calendar.SECOND, 0);
-            limit_before.set(Calendar.DAY_OF_MONTH, 3);
-            limit_before.set(Calendar.MONTH, Calendar.AUGUST);
-            limit_before.set(Calendar.YEAR, 2020);
 
-            Calendar limit_after = Tools.setCalendarOnDate(12, 10, 2020);
+                        ocal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(srs.opening.split(":")[0]));
+                        ocal.set(Calendar.MINUTE, Integer.parseInt(srs.opening.split(":")[1]));
+                        if(cal.before(ocal)) {
+                            bookingArray[1] = "";
+                            bookingArray[3] = "info#" + srs.info;
+                            return bookingArray;
+                        }
+                    }
+                    if(srs.closing!=null&&!srs.closing.isEmpty()) {
+                        System.out.println("J");
+                        vcal.add(Calendar.MINUTE, Integer.parseInt(duration));
+                        ccal = (Calendar)cal.clone();
 
-            if(cal.after(limit_before)&&cal.before(limit_after)) {
+                        int dow = ccal.get(Calendar.DAY_OF_WEEK);
 
-               limit_before = (Calendar)vcal.clone();
-               limit_before.set(Calendar.HOUR_OF_DAY, 16);
-               limit_before.set(Calendar.MINUTE, 1);
+                        System.out.println(dow);
 
-                if (vcal.after(limit_before)) {
-                    bookingArray[1] = "";
-                    bookingArray[3] = "notbookable3";
-                    return bookingArray;
+                        if((srs.day!=null&&!srs.day.isEmpty()&&!srs.day.equals("null"))&&!srs.day.equals(""+dow)) continue;
+                        if((srs.day==null||srs.day.isEmpty()||srs.day.equals("null"))&&!(dow>=2&&dow<=6)) continue;
+
+                        ccal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(srs.closing.split(":")[0]));
+                        ccal.set(Calendar.MINUTE, Integer.parseInt(srs.closing.split(":")[1]));
+                        if(vcal.after(ccal)) {
+                            bookingArray[1] = "";
+                            bookingArray[3] = "info#" + srs.info;
+                            return bookingArray;
+                        }
+                    }
                 }
             }
         }
-        //** Veterinärmedizin : ENDE
 
         if(cal.getTimeInMillis()>=cal_today.getTimeInMillis()||cal.getTimeInMillis()<System.currentTimeMillis()) {
             bookingArray[1] = "";
