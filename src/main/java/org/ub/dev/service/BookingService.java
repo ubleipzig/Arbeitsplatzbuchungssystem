@@ -309,6 +309,7 @@ public class BookingService {
             String rulesetinfotext = rc.request().getFormAttribute("infotext");
             String rulesetinstitutions = rc.request().getFormAttribute("institutions");
             String rulesetisnew = rc.request().getFormAttribute("isnewrule");
+            String rulesetday = rc.request().getFormAttribute("day");
 
             //rulesetstartdate = 2020-09-18
             //rulesetstarttime = 00:00
@@ -347,6 +348,11 @@ public class BookingService {
                 }
 
                 srs.setWorkspaceIDs(idlist);
+            }
+
+            if(!rulesetday.isEmpty()&&(!rulesetopening.isEmpty()||!rulesetclosing.isEmpty())) {
+                if(rulesetday.equals("0")) rulesetday="null";
+                srs.setClosingModification(rulesetday, rulesetopening, rulesetclosing);
             }
 
             rulesets.add(srs);
@@ -489,8 +495,8 @@ public class BookingService {
 
                         int dow = ocal.get(Calendar.DAY_OF_WEEK);
 
-                        if((srs.day!=null&&!srs.day.isEmpty())&&srs.day!=(""+dow)) continue;
-                        if((srs.day==null||srs.day.isEmpty())&&!(dow>=2&&dow<=6)) continue;
+                        if((srs.day!=null&&!srs.day.isEmpty()&&!srs.day.equals("null"))&&!srs.day.equals(""+dow)) continue;
+                        if((srs.day==null||srs.day.isEmpty()||srs.day.equals("null"))&&!(dow>=2&&dow<=6)) continue;
 
 
                         ocal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(srs.opening.split(":")[0]));

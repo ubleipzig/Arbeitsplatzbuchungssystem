@@ -44,6 +44,7 @@ public class RulesetLoader {
         doc.setRootElement(xml_rulesets);
 
         for(SpecialRuleset srs:rulesets) {
+
             String type = srs.typeOfRuleset;
             String library = srs.library;
             String name = srs.name;
@@ -65,6 +66,10 @@ public class RulesetLoader {
 
             String info = (String)preventNull(srs.info);
 
+            String day = srs.day;
+            String opening = srs.opening;
+            String closing = srs.closing;
+
             Element ruleset = new Element("ruleset");
             ruleset.setAttribute("name", name);
             ruleset.setAttribute("type", type);
@@ -74,6 +79,24 @@ public class RulesetLoader {
             ruleset.addContent(new Element("area").setText(area));
             ruleset.addContent(new Element("workspaceIDs").setText(idlist));
             ruleset.addContent(new Element("info").setText(info));
+
+            if(day!=null) {
+
+                Element closuremodification = new Element("closuremodification");
+                closuremodification.setAttribute("day",day);
+
+                if(!opening.isEmpty()&&opening!=null)
+                {
+                    closuremodification.setAttribute("opening",opening);
+                }
+
+                if(!closing.isEmpty()&&closing!=null) {
+                    closuremodification.setAttribute("closing", closing);
+                }
+
+                ruleset.addContent(closuremodification);
+
+            }
 
             xml_rulesets.addContent(ruleset);
         }
