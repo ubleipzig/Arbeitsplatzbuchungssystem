@@ -1,5 +1,6 @@
 package org.ub.dev.service;
 
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -104,6 +105,14 @@ public class BookingService {
             }
         });
 
+        vertx.exceptionHandler(new Handler<Throwable>() {
+            @Override
+            public void handle(Throwable event) {
+                System.out.println("ERROR");
+                event.printStackTrace();
+            }
+        });
+
         router.route().handler(CorsHandler.create(".*."));
         router2.route().handler(CorsHandler.create(".*."));
         router.route("/booking/login*").handler(BodyHandler.create());
@@ -142,6 +151,13 @@ public class BookingService {
         router.post("/booking/modifyClosure").blockingHandler(this::modifyTimeslots);
         router.route("/booking/rulesets*").handler(BodyHandler.create());
         router.post("/booking/rulesets").blockingHandler(this::rulesets);
+        router.errorHandler(500, rc->{
+            try {
+                throw rc.failure();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
 
         router.route("/booking/stats*").handler(BodyHandler.create());
         router.get("/booking/stats").blockingHandler(this::stats);
@@ -280,7 +296,9 @@ public class BookingService {
 
     private void rulesets(RoutingContext rc) {
 
-        if(rc.request().getFormAttribute("rulesetname").isEmpty()) {
+        String optiontype = rc.request().getFormAttribute("optiontype");
+
+        if(optiontype.equals("1")) {
 
             JsonObject json = new JsonObject();
             JsonArray array = new JsonArray();
@@ -294,7 +312,37 @@ public class BookingService {
             rc.response().headers().add("Content-type", "application/json");
             rc.response().end(json.encodePrettily());
 
-        }else{
+        }
+
+        if(optiontype.equals("3")) {
+
+            String rulesetname = rc.request().getFormAttribute("rulesetname");
+
+            for (SpecialRuleset srs : rulesets) {
+                if(srs.name.equals(rulesetname)){
+                    JsonObject json = new JsonObject();
+                    json.put("name", srs.name);
+                    json.put("type", srs.typeOfRuleset);
+                    json.put("institution", srs.library);
+
+                    String starttime_hour = srs.from.get(Calendar.HOUR_OF_DAY)<10 ? ("0"+srs.from.get(Calendar.HOUR_OF_DAY)) : (""+srs.from.get(Calendar.HOUR_OF_DAY));
+                    String starttime_minute = srs.from.get(Calendar.MINUTE)<10 ? ("0"+srs.from.get(Calendar.MINUTE)) : (""+srs.from.get(Calendar.MINUTE));
+                    String startdate_month = (srs.from.get(Calendar.MONTH)+1)<10 ? ("0"+(srs.from.get(Calendar.MONTH)+1)) : ("" + (srs.from.get(Calendar.MONTH)+1));
+                    String startdate_day = srs.from.get(Calendar.DAY_OF_MONTH)<10 ? ("0"+srs.from.get(Calendar.DAY_OF_MONTH)) : ("" + srs.from.get(Calendar.DAY_OF_MONTH));
+                    String startdate = srs.from.get(Calendar.YEAR)+"-"+startdate_month+"-"+startdate_day;
+
+                    json.put("starttime", starttime_hour+":"+starttime_minute);
+                    json.put("startdate", startdate);
+
+
+                    rc.response().headers().add("Content-type", "application/json");
+                    rc.response().end(json.encodePrettily());
+                }
+            }
+
+        }
+
+        if(optiontype.equals("2")){
 
             String rulesetname = rc.request().getFormAttribute("rulesetname");
             String rulesettype = rc.request().getFormAttribute("rulesettype");
@@ -360,6 +408,7 @@ public class BookingService {
             RulesetLoader.toFile(rulesets);
 
             rc.response().setStatusCode(200).end();
+
         }
     }
 

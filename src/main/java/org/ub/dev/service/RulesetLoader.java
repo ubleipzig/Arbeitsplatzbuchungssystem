@@ -85,13 +85,16 @@ public class RulesetLoader {
                 Element closuremodification = new Element("closuremodification");
                 closuremodification.setAttribute("day",day);
 
-                if(!opening.isEmpty()&&opening!=null)
-                {
-                    closuremodification.setAttribute("opening",opening);
+                if(opening!=null) {
+                    if (!opening.isEmpty()) {
+                        closuremodification.setAttribute("opening", opening);
+                    }
                 }
 
-                if(!closing.isEmpty()&&closing!=null) {
-                    closuremodification.setAttribute("closing", closing);
+                if(closing!=null) {
+                    if (!closing.isEmpty()) {
+                        closuremodification.setAttribute("closing", closing);
+                    }
                 }
 
                 ruleset.addContent(closuremodification);
