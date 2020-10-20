@@ -334,6 +334,15 @@ public class BookingService {
                     json.put("starttime", starttime_hour+":"+starttime_minute);
                     json.put("startdate", startdate);
 
+                    String endtime_hour = srs.until.get(Calendar.HOUR_OF_DAY)<10 ? ("0"+srs.until.get(Calendar.HOUR_OF_DAY)) : (""+srs.until.get(Calendar.HOUR_OF_DAY));
+                    String endtime_minute = srs.until.get(Calendar.MINUTE)<10 ? ("0"+srs.until.get(Calendar.MINUTE)) : (""+srs.until.get(Calendar.MINUTE));
+                    String enddate_month = (srs.until.get(Calendar.MONTH)+1)<10 ? ("0"+(srs.until.get(Calendar.MONTH)+1)) : ("" + (srs.until.get(Calendar.MONTH)+1));
+                    String enddate_day = srs.until.get(Calendar.DAY_OF_MONTH)<10 ? ("0"+srs.until.get(Calendar.DAY_OF_MONTH)) : ("" + srs.until.get(Calendar.DAY_OF_MONTH));
+                    String enddate = srs.until.get(Calendar.YEAR)+"-"+enddate_month+"-"+enddate_day;
+
+                    json.put("endtime", endtime_hour+":"+endtime_minute);
+                    json.put("enddate", enddate);
+
 
                     rc.response().headers().add("Content-type", "application/json");
                     rc.response().end(json.encodePrettily());
