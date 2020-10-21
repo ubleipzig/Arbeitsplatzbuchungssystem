@@ -343,6 +343,11 @@ public class BookingService {
                     json.put("endtime", endtime_hour+":"+endtime_minute);
                     json.put("enddate", enddate);
 
+                    json.put("opening", srs.opening);
+                    json.put("closing", srs.closing);
+
+
+
 
                     rc.response().headers().add("Content-type", "application/json");
                     rc.response().end(json.encodePrettily());
