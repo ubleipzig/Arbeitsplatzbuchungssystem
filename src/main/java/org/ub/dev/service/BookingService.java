@@ -345,8 +345,18 @@ public class BookingService {
 
                     json.put("opening", srs.opening);
                     json.put("closing", srs.closing);
+                    json.put("day", srs.day);
 
+                    json.put("area", srs.area);
 
+                    String ids = new String();
+                    if(srs.workspaceIDs!=null&&!srs.workspaceIDs.isEmpty()) {
+                        for (int id : srs.workspaceIDs)
+                            ids += "" + id + ",";
+                        ids = ids.substring(0, ids.length() - 1);
+                    }
+                    json.put("workspaceids", ids);
+                    json.put("infotext",srs.info);
 
 
                     rc.response().headers().add("Content-type", "application/json");
@@ -1301,7 +1311,10 @@ public class BookingService {
         String institution = rc.getBodyAsJson().getString("institution");
 
         boolean checkdateboolean = checkdate_internal(date, institution);
-        if(checkdateboolean) rc.response().end("true");
+        if(checkdateboolean) {
+            rc.response().end("true");
+            return;
+        }
 
         rc.response().end("false");
 
