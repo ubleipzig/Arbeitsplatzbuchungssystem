@@ -294,6 +294,17 @@ public class BookingService {
 
     }
 
+    private void removeruleset(String rulesetname) {
+        SpecialRuleset last_srs = null;
+        for (SpecialRuleset srs : rulesets) {
+            if(!srs.name.equals(rulesetname)) continue;
+            last_srs = srs;
+        }
+
+        rulesets.remove(last_srs);
+        RulesetLoader.toFile(rulesets);
+    }
+
     private void rulesets(RoutingContext rc) {
 
         String optiontype = rc.request().getFormAttribute("optiontype");
@@ -312,6 +323,14 @@ public class BookingService {
             rc.response().headers().add("Content-type", "application/json");
             rc.response().end(json.encodePrettily());
 
+        }
+
+        if(optiontype.equals("4")) {
+            String rulesetname = rc.request().getFormAttribute("rulesetname");
+
+            removeruleset(rulesetname);
+
+            rc.response().setStatusCode(200).end();
         }
 
         if(optiontype.equals("3")) {
@@ -382,6 +401,10 @@ public class BookingService {
             String rulesetinstitutions = rc.request().getFormAttribute("institutions");
             String rulesetisnew = rc.request().getFormAttribute("isnewrule");
             String rulesetday = rc.request().getFormAttribute("day");
+
+            if(rulesetisnew.equals("0")) {
+                removeruleset(rulesetname);
+            }
 
             //rulesetstartdate = 2020-09-18
             //rulesetstarttime = 00:00
