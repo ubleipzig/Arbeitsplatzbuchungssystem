@@ -389,7 +389,7 @@ public class BookingService {
             switch (rulesettype) {
                 case "1": rulesettype = "Bibliotheksschließung"; break;
                 case "2": rulesettype = "Platzblockade"; break;
-                case "3": rulesettype = "Bereichschließung"; break;
+                case "3": rulesettype = "Bereichsschließung"; break;
                 case "4": rulesettype = "Öffnungszeitenänderung"; break;
             }
 
