@@ -307,7 +307,22 @@ public class BookingService {
 
     private void rulesets(RoutingContext rc) {
 
+        String admins = p.getProperty("admins");
+        boolean allowed = false;
+
         String optiontype = rc.request().getFormAttribute("optiontype");
+
+        String username = rc.request().getFormAttribute("username");
+        String token = rc.request().getFormAttribute("token");
+
+        if(tokenmapma.get(username).equals(token)) {
+            for(String admin:admins.split(",")){
+                if(admin.equals(username)) allowed = true;
+            }
+        }
+
+        if(!allowed) return;
+
 
         if(optiontype.equals("1")) {
 
