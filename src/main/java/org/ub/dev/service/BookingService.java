@@ -321,7 +321,10 @@ public class BookingService {
             }
         }
 
-        if(!allowed) return;
+        if(!allowed) {
+            rc.response().end("not authorized");
+            return;
+        }
 
 
         if(optiontype.equals("1")) {
@@ -483,6 +486,17 @@ public class BookingService {
 
         if((!tokenmapma.get(username).equals(token))||(institution.isEmpty())) {
             rc.response().end();
+            return;
+        }
+
+        boolean allowed = false;
+
+        for(String admin:p.getProperty("admins").split(",")) {
+            if(admin.equals(username)) allowed = true;
+        }
+
+        if(!allowed) {
+            rc.response().end("not authorized");
             return;
         }
 
