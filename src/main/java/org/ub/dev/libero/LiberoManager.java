@@ -63,6 +63,14 @@ public class LiberoManager {
         return retval;
     }
 
+
+    public String isWalkin(String readernumber, String token, Wachtl wachtl) {
+
+        String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();
+
+        return user_category;
+    }
+
     private String fakeToken() {
         String array = new String("abcdefghijklmnopqrstuvwxyz");
         String token = "";

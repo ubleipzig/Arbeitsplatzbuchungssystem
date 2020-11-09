@@ -16,6 +16,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.ub.dev.libero.LiberoManager;
 import org.ub.dev.sql.SQLHub;
+import org.ub.dev.tools.Search;
 import org.ub.dev.tools.Tools;
 
 import java.io.File;
@@ -151,6 +152,10 @@ public class BookingService {
         router.post("/booking/modifyClosure").blockingHandler(this::modifyTimeslots);
         router.route("/booking/rulesets*").handler(BodyHandler.create());
         router.post("/booking/rulesets").blockingHandler(this::rulesets);
+
+        router.route("/booking/followrequest*").handler(BodyHandler.create());
+        router.post("/booking/followrequest").blockingHandler(this::followrequest);
+
         router.errorHandler(500, rc->{
             try {
                 throw rc.failure();
@@ -1465,6 +1470,25 @@ public class BookingService {
 
         rc.response().headers().add("Content-type","application/json");
         rc.response().end(json.encodePrettily());
+
+    }
+
+    private void followrequest(RoutingContext rc) {
+
+        String institutions = rc.request().getFormAttribute("institutions");
+        String readernumber = rc.request().getFormAttribute("readernumber");
+        String visitdate = rc.request().getFormAttribute("visitdate");
+        String seatlist = rc.request().getFormAttribute("seatlist");
+        String token = rc.request().getFormAttribute("token");
+
+        if(!tokenmapma.containsValue(token)) {
+            rc.response().end();
+            return;
+        }
+
+        Search search = new Search();
+
+        rc.response().end(search.request(institutions, seatlist, visitdate, readernumber).replaceAll("\n","<br>"));
 
     }
 

@@ -7,6 +7,7 @@ plugins {
 group 'org.ub.dev'
 version '1.0-SNAPSHOT'
 
+//mainClassName="org.ub.dev.tools.Search"
 mainClassName="org.ub.dev.service.BookingService"
 //mainClassName="org.ub.dev.tools.DBImporter_RewiII"
 
