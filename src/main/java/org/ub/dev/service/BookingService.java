@@ -1488,7 +1488,7 @@ public class BookingService {
 
         Search search = new Search();
 
-        rc.response().end(search.request(institutions, seatlist, visitdate, readernumber).replaceAll("\n","<br>"));
+        rc.response().end(search.request(institutions, seatlist, visitdate, readernumber, token).replaceAll("\n","<br>"));
 
     }
 
@@ -1758,6 +1758,7 @@ public class BookingService {
         if(!token.equals("null")) {
             tokenmapma.put(username, token);
             tokentimesma.put(username, System.currentTimeMillis());
+            msg = p.getProperty("admins");
         }
 
         JsonObject answer_object = new JsonObject();
