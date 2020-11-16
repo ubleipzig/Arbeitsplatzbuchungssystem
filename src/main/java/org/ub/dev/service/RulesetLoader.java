@@ -28,6 +28,7 @@ public class RulesetLoader {
 
     public static Object preventNull(Object s) {
 
+        if(s==null) return "";
 
         if(s.getClass().getName().equals("java.lang.String")) {
             String xs = (String)s;
