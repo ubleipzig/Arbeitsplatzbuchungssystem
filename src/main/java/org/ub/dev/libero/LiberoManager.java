@@ -64,6 +64,14 @@ public class LiberoManager {
     }
 
 
+    /**
+     * Rückgabe der Nutzerkategorie nach Bibliotheksnummer, erwartet die Übergabe einer Wachtl-Instanz
+     *
+     * @param readernumber
+     * @param token
+     * @param wachtl
+     * @return
+     */
     public String isWalkin(String readernumber, String token, Wachtl wachtl) {
 
         String user_category = wachtl.getLibrarySoapClient().getMemberDetails(token, null, readernumber).getCategory().getCode();

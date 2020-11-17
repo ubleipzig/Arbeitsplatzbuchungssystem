@@ -19,6 +19,14 @@ public class DataCore {
     String from, until;
     Properties p;
 
+    /**
+     * Konstruktor, erwartet die Bibliothek, Start- und Endzeitpunkt
+     *
+     * @param institution
+     * @param from
+     * @param until
+     * @param p
+     */
     public DataCore(String institution, String from, String until, Properties p) {
         this.institution = institution;
         this.from = from;
@@ -26,6 +34,11 @@ public class DataCore {
         this.p = p;
     }
 
+    /**
+     * Ruft die Daten aus der DB ab und erzeugt CSV
+     *
+     * @return
+     */
     public String getData() {
 
         String result = new String();

@@ -3,6 +3,10 @@ package org.ub.dev.service;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+/**
+ * org.ub.dev.service.SpecialRuleset - Klasse für die Sonderregel
+ *
+ */
 public class SpecialRuleset {
 
     String typeOfRuleset, area, library, name, info;
@@ -10,6 +14,12 @@ public class SpecialRuleset {
     ArrayList<Integer> workspaceIDs;
     String day, opening, closing;
 
+    /**
+     * Konstruktor, erwartet Regeltyp, Bibliothek, Regelname
+     * @param typeOfRuleset
+     * @param library
+     * @param name
+     */
     public SpecialRuleset(String typeOfRuleset, String library, String name){
         this.typeOfRuleset=typeOfRuleset;
         this.library = library;

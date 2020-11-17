@@ -12,20 +12,35 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
 
+/**
+ * org.ub.dev.service.RulesetLoader - Ladeklasse für Sonderregeln für das APBS
+ *
+ * Die Klasse lädt/schreibt die Sonderregeln aus/in der/die XML-Datei und stellt diese dem System zur Verfügung
+ *
+ */
 public class RulesetLoader {
 
     ArrayList<SpecialRuleset> rsrlist;
 
+    /**
+     * Konstruktor, erwartet eine Liste von Sonderregeln (CallByValue)
+     *
+     * @param rulesets
+     */
     public RulesetLoader(ArrayList<SpecialRuleset> rulesets) {
         rsrlist = rulesets;
         init();
     }
 
+    /**
+     * Prüft ein Object auf Null und gibt ggf. einen leeren String zurück, sonst das Object selbst
+     *
+     * @param s
+     * @return
+     */
     public static Object preventNull(Object s) {
 
         if(s==null) return "";
@@ -38,6 +53,11 @@ public class RulesetLoader {
         return s;
     }
 
+    /**
+     * Schreibt die Sonderregeln in eine XML-Datei
+     *
+     * @param rulesets
+     */
     public static void toFile(ArrayList<SpecialRuleset> rulesets) {
 
         Document doc = new Document();
@@ -113,6 +133,10 @@ public class RulesetLoader {
         }
     }
 
+    /**
+     * Initialisation, lädt die Sonderregeln aus der XML-Datei
+     *
+     */
     private void init() {
         try {
 

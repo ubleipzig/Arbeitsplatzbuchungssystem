@@ -87,6 +87,7 @@ public class BookingService {
         final VertxOptions vertOptions = new VertxOptions();
         vertOptions.setMaxEventLoopExecuteTime(9000000000L);
 
+        //Listener für den Port über den alle nichtblockierenden Abfragen laufen
         Vertx vertx = Vertx.vertx(vertOptions);
         Router router = Router.router(vertx);
         vertx.createHttpServer().requestHandler(router).listen(12105, result -> {
@@ -97,6 +98,7 @@ public class BookingService {
             }
         });
 
+        //Listener für den Port über den die Buchungsabfrage läuft
         Router router2 = Router.router(vertx);
         vertx.createHttpServer().requestHandler(router2).listen(12106, result -> {
             if (result.succeeded()) {
@@ -106,6 +108,7 @@ public class BookingService {
             }
         });
 
+        //Wirft bei fehlerhaften Abfragen die entsprechenden Fehlermeldungen
         vertx.exceptionHandler(new Handler<Throwable>() {
             @Override
             public void handle(Throwable event) {
@@ -114,8 +117,11 @@ public class BookingService {
             }
         });
 
+        //CORS-System-Initialisierung
         router.route().handler(CorsHandler.create(".*."));
         router2.route().handler(CorsHandler.create(".*."));
+
+        //Definition aller Endpunkte für die API
         router.route("/booking/login*").handler(BodyHandler.create());
         router.post("/booking/login").blockingHandler(this::login);
         router.route("/booking/logout*").handler(BodyHandler.create());
@@ -156,6 +162,7 @@ public class BookingService {
         router.route("/booking/followrequest*").handler(BodyHandler.create());
         router.post("/booking/followrequest").blockingHandler(this::followrequest);
 
+        //Errorhandler für den Fall Statuscode = 500, tritt immer bei fehlerhaften Anfragenabarbeitungen auf
         router.errorHandler(500, rc->{
             try {
                 throw rc.failure();
@@ -299,6 +306,11 @@ public class BookingService {
 
     }
 
+    /**
+     * Löscht eine Sonderregel aus dem Regelverzeichnis
+     *
+     * @param rulesetname
+     */
     private void removeruleset(String rulesetname) {
         SpecialRuleset last_srs = null;
         for (SpecialRuleset srs : rulesets) {
@@ -310,6 +322,13 @@ public class BookingService {
         RulesetLoader.toFile(rulesets);
     }
 
+
+    /**
+     * API-Endpunkt für die Sonderregeln
+     * Diese Abfrage, die als POST-Request definiert ist, liefert je nach Type unterschiedliche Antworten
+     *
+     * @param rc
+     */
     private void rulesets(RoutingContext rc) {
 
         String admins = p.getProperty("admins");
@@ -320,6 +339,7 @@ public class BookingService {
         String username = rc.request().getFormAttribute("username");
         String token = rc.request().getFormAttribute("token");
 
+        //Nutzer muss Mitarbeiter UND eingetragener Administrator sein
         if(tokenmapma.get(username).equals(token)) {
             for(String admin:admins.split(",")){
                 if(admin.equals(username)) allowed = true;
@@ -482,6 +502,11 @@ public class BookingService {
         }
     }
 
+    /**
+     * API-Endpunkt für die Modifikation von Öffnungszeiten (für/durch Mitarbeiter)
+     *
+     * @param rc
+     */
     private void modifyTimeslots(RoutingContext rc) {
 
         String scd = rc.request().getFormAttribute("data_scd");
@@ -506,8 +531,6 @@ public class BookingService {
         }
 
         scd = scd.replaceAll(" ","").trim();
-
-        //scd.matches("([01][0-9]):[0-5][0-9]")
 
         JsonObject json = (JsonObject)timeslots.get(institution);
 
@@ -715,11 +738,6 @@ public class BookingService {
         //semaphore
         secured_area = true;
 
-        /*
-        if(special_query) area_query = "and area = 'Archäologie'";
-        if(special_query1) area_query+= " and area not like 'Ost 1. OG'";
-         */
-
         if(need2use_areaquery) area_query+=special_areaquery;
 
         System.out.println(area_query);
@@ -838,9 +856,10 @@ public class BookingService {
     }
 
     /**
-     * Build workload statistics for every library depends on usage
+     * Erstelle eine Auslastungsanzeige für die jeweilige Bibliothek
+     *
+     * @param rc
      */
-
     public void workload(RoutingContext rc) {
 
         String data = new String();
@@ -869,6 +888,7 @@ public class BookingService {
             dates[i] = today.get(Calendar.DAY_OF_MONTH)+"."+(today.get(Calendar.MONTH)+1)+".";
         }
 
+        //Oldstyle, komplette Darstellung sollte über ein CSS-gestütztes System laufen, hier nur eine Brückenlösung
         data = "<table><tr align='center'><th style='min-width:"+w+"px;'>&nbsp;</th><th style='min-width:"+w+"px;'>heute</th><th style='min-width:"+w+"px'>morgen</th><th style='min-width:"+w+"px'>"+dates[0]+"</th><th style='min-width:"+w+"px'>"+dates[1]+
                 "</th><th style='min-width:"+w+"px'>"+dates[2]+"</th><th style='min-width:"+w+"px'>"+dates[3]+"</th><th style='min-width:"+w+"px'>"+dates[4]+"</th><th style='min-width:"+w+"px'>"+dates[5]+"</th></tr>";
 
@@ -1473,6 +1493,11 @@ public class BookingService {
 
     }
 
+    /**
+     * API-Enpunkt für die Nachverfolgung von Infektionsketten
+     *
+     * @param rc
+     */
     private void followrequest(RoutingContext rc) {
 
         String institutions = rc.request().getFormAttribute("institutions");
@@ -1877,7 +1902,6 @@ public class BookingService {
 
         workloadsystem.start();
 
-        //experimenteller einsatz der rulesets
         RulesetLoader rsloader = new RulesetLoader(rulesets);
     }
 

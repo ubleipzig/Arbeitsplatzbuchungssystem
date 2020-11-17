@@ -10,6 +10,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
+/**
+ * org.ub.dev.service.WorkloadStats - Klasse zur Generierung vom Daten für die Auslastungsanzeige
+ *
+ */
 public class WorkloadStats {
 
     Properties p = new Properties();
@@ -22,6 +26,12 @@ public class WorkloadStats {
 
     static WorkloadStats wls;
 
+    /**
+     * Singleton-Instanzierung
+     *
+     * @param p
+     * @return
+     */
     public static WorkloadStats getInstance(Properties p) {
         if(wls==null) wls = new WorkloadStats(p);
         return wls;
@@ -149,21 +159,6 @@ public class WorkloadStats {
             if(!area.equals("no selection")) {
                 if (!workspace.get("area").equals(area)) continue;
             }
-
-            /*if(!fitting.isEmpty())
-            {
-                String foundfitting = (String)workspace.get("fitting");
-
-                boolean nofitting = false;
-
-                for(String f:fitting) {
-
-                    if(!foundfitting.contains(f)) nofitting=true;
-                }
-
-                if(nofitting) continue;
-
-            }*/
 
             int id = (int)workspace.get("id");
 

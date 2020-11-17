@@ -11,11 +11,15 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Properties;
 
+/**
+ * org.ub.dev.tools.Search - Klasse für die Nachverfolgung von Infektionen
+ *
+ */
 public class Search {
 
 
     boolean searchInDB = true;
-    String pathtodb = "";
+    String pathtodb = ""; //work is still in progress
 
     Properties p;
 
@@ -37,6 +41,16 @@ public class Search {
 
     }
 
+    /**
+     * Rückgabe von NutzerInnen die eine Infektion gemeldet haben und den NuterInnen, die um die Plätze verteilt saßen.
+     *
+     * @param institution
+     * @param seats
+     * @param day
+     * @param infectedreadernumber
+     * @param token
+     * @return
+     */
     public String request(String institution, String seats, String day, String infectedreadernumber, String token) {
 
         String protocol = new String();
@@ -80,14 +94,4 @@ public class Search {
         return protocol;
     }
 
-    public static void main(String args[]) {
-
-        Search search = new Search();
-        String institution = "Bibliotheca Albertina";
-        String seats = "1,2,3,4,5,6,7,8";
-        String day = "2020-11-05";
-        String infectedreadernumber = "207227-5";
-
-        System.out.println(search.request(institution, seats, day, infectedreadernumber, null));
-    }
 }
