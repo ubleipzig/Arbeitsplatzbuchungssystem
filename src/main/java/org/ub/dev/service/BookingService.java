@@ -90,7 +90,7 @@ public class BookingService {
         //Listener für den Port über den alle nichtblockierenden Abfragen laufen
         Vertx vertx = Vertx.vertx(vertOptions);
         Router router = Router.router(vertx);
-        vertx.createHttpServer().requestHandler(router).listen(12105, result -> {
+        vertx.createHttpServer().requestHandler(router).listen(8081, result -> {
             if (result.succeeded()) {
                 Promise.promise().complete();
             } else {
@@ -100,7 +100,7 @@ public class BookingService {
 
         //Listener für den Port über den die Buchungsabfrage läuft
         Router router2 = Router.router(vertx);
-        vertx.createHttpServer().requestHandler(router2).listen(12106, result -> {
+        vertx.createHttpServer().requestHandler(router2).listen(8082, result -> {
             if (result.succeeded()) {
                 Promise.promise().complete();
             } else {
