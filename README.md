@@ -1,3 +1,5 @@
+**Hinweis: der aktuelle Stand des Quellcodes enthält Sicherheitslücken. Wir beabsichtigen mittelfristig, eine bereinigte Version des Quellcodes zu veröffentlichen.**
+
 # Arbeitsplatzbuchung
 
 ## Systemvoraussetzungen
